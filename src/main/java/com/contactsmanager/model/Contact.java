@@ -57,3 +57,4 @@ public class Contact {
     public String toString() {
         return "Contact { name=' " + name + " ', studentId= " + studentId + " }";
     }
+}

@@ -1,14 +1,16 @@
 package com.contactsmanager;
 
+import com.contactsmanager.interfaces.ContactsManager;
 import com.contactsmanager.interfaces.Graph;
 import com.contactsmanager.model.Contact;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-public class Graph {
+public class Graph implements ContactsManager{
     private Map<Contact, LinkedList<Contact>> adj = new HashMap<>();
     private boolean directed;
 
@@ -20,59 +22,102 @@ public class Graph {
         directed = d; // Can be true or false
     }
 
-    // ADD NODE
-    public void addNode(Contact nodeA) {
-        adj.putIfAbsent(nodeA, new LinkedList<>());
+    // ADD NODE -OK
+    @Override
+    public void addContact(Contact contact) {
+        adj.putIfAbsent(contact, new LinkedList<>());
     }
 
-    // ADD CONNECTION (and NODE if any is missing)
-    public void addEdge(Contact nodeA, Contact nodeB) {
-        adj.putIfAbsent(nodeA, new LinkedList<>()); // Add node a
-        adj.putIfAbsent(nodeB, new LinkedList<>()); // Add node b
+    // SEARCH NODE -OK
+    @Override
+    public Contact searchContact(String name) {
+        for (Contact contact : adj.keySet()) { // Remove edges to the contact for whole contact list
+            if (contact.getName().equals(name)) {
+                return contact;
+            }
+        }
+        System.out.println("Contact not found: " + name);
+        return null;
+    }
+
+    // UPDATE CONTACT -OK
+    @Override
+    public void updateContact(Contact contact, String newName, int newStudentId) {
+        Contact target = searchContact(contact.getName());
+        if (target != null) {
+            contact.setName(newName);
+            contact.setStudentId(newStudentId);
+        }
+    }
+
+    // ADD CONNECTION -OK
+    @Override
+    public void addConnection(String contact1, String contact2) {
+        Contact nodeA = searchContact(contact1); // Search nodes
+        Contact nodeB = searchContact(contact2);
+        if (nodeA == null || nodeB == null) {
+            System.out.println("Some nodes are missing/ doesn't exist.");
+        }
         adj.get(nodeA).add(nodeB); // Add edge a->b
         if (!directed) {
             adj.get(nodeB).add(nodeA); // Add edge b->a
         }
-    } // Time O(1), Space O(1)
+    } // Time O(V), Space O(1)
 
-    // DELETE CONNECTION
-    public boolean removeEdge(Contact nodeA, Contact nodeB) {
-        if (!adj.containsKey(nodeA) || !adj.containsKey(nodeB)) {
-            return false; // Invalid input
+
+    // DELETE CONNECTION -OK
+    @Override
+    public void removeConnection(String contact1, String contact2) {
+        Contact nodeA = searchContact(contact1); // Search nodes
+        Contact nodeB = searchContact(contact2);
+        if (nodeA == null || nodeB == null) {
+            System.out.println("Some nodes are missing/ doesn't exist.");
+            return;
         }
-        LinkedList<Contact> neighborsOfA = adj.get(nodeA);
+
+        LinkedList<Contact> neighborsOfA = adj.get(nodeA); // Get neighbors
         LinkedList<Contact> neighborsOfB = adj.get(nodeB);
         if (neighborsOfA == null || neighborsOfB == null) {
-            return false; // No neighbors found
+            System.out.println("Connection doesn't exist."); // No neighbors found
+            return;
         }
-        boolean r1 = neighborsOfA.remove(nodeB); // Remove a->b
+        neighborsOfA.remove(nodeB); // Remove a->b
         if (!directed) { // Undirected graph
-            boolean r2 = neighborsOfB.remove(nodeA); // Remove b->a
-            return r1 && r2;
+            neighborsOfB.remove(nodeA); // Remove b->a
         }
-        return r1;
-    } // Time O(1), Space O(1)
+    }
 
-    // DELETE NODE
+    // DELETE NODE - OK
     /*To delete a node,
     you must first remove all edges connected to the node
     and then remove the node from the key set of adj. */
-    public boolean removeNode(Contact nodeA) {
-        if (!adj.containsKey(nodeA)) {
-            return false;
+    @Override
+    public void deleteContact(String name) {
+        Contact target = null;
+        for (Contact contact : adj.keySet()) { // Find the contact with the given name
+            if (contact.getName().equals(name)) {
+                target = contact;
+                break;
+            }
         }
+        if (target == null) {
+            System.out.println("Contact not found: " + name);
+            return;
+        }
+
         if (!directed) { // Undirected graph
-            LinkedList<Contact> neighbors = adj.get(nodeA);
+            LinkedList<Contact> neighbors = adj.get(target);
             for (Contact node : neighbors) {
-                adj.get(node).remove(nodeA); // Remove edges
+                adj.get(node).remove(target); // Remove edges per person
             }
         } else {
-            for (Contact key : adj.keySet()) {
-                adj.get(key).remove(nodeA); // Remove edges
+            for (Contact contact : adj.keySet()) { // Remove edges to the contact for whole contact list
+                adj.get(contact).remove(target);
             }
         }
-        adj.remove(nodeA); // Remove node
-        return true;
+
+        adj.remove(target); // Remove the contact itself
+        System.out.println("Deleted contact: " + name);
     } // Time O(V+E), Space O(1),
     // V is the number of nodes,
     // E is the number of edges
@@ -135,4 +180,53 @@ public class Graph {
             System.out.print(adj.get(node).toString());
         }
     }
+
+    // RETURN ALL CONTACTS -OK
+    @Override
+    public List<Contact> listAllContacts() {
+        List<Contact> allContacts = new LinkedList<>();
+        for (Contact node : adj.keySet()) {
+            allContacts.add(node);
+        }
+        return allContacts;
+    }
+
+    // SUGGEST CONTACTs -OK
+    @Override
+    public List<Contact> suggestContacts(String contact) {
+        List<Contact> recommendedContacts = new LinkedList<>();
+        Contact nodeA = searchContact(contact);
+
+        if (nodeA == null) {
+            System.out.println("Contact not found: " + contact);
+            return recommendedContacts;
+        }
+
+        LinkedList<Contact> directConnections = adj.get(nodeA);
+        if (directConnections == null || directConnections.isEmpty()) {
+            System.out.println("Unable to suggest contacts from not knowing anyone.");
+            return recommendedContacts;
+        }
+
+        // For fast lookup
+        HashMap<Contact, Boolean> isDirectFriend = new HashMap<>();
+        for (Contact c : directConnections) {
+            isDirectFriend.put(c, true);
+        }
+        isDirectFriend.put(nodeA, true); // Avoid suggesting self
+
+        for (Contact friend : directConnections) { // For each direct friend
+            LinkedList<Contact> friendsOfFriend = adj.get(friend);
+            if (friendsOfFriend != null) {
+                for (Contact potential : friendsOfFriend) { // Direct friends' friends
+                    if (!isDirectFriend.containsKey(potential) && !recommendedContacts.contains(potential) && !potential.equals(nodeA)) { // Avoid duplicates
+                        recommendedContacts.add(potential);
+                    }
+                }
+            }
+        }
+
+        return recommendedContacts;
+    }
+
 }

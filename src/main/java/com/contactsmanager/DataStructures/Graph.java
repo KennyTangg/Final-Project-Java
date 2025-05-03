@@ -1,7 +1,6 @@
-package com.contactsmanager;
+package com.contactsmanager.DataStructures;
 
 import com.contactsmanager.interfaces.ContactsManager;
-import com.contactsmanager.interfaces.Graph;
 import com.contactsmanager.model.Contact;
 
 import java.util.HashMap;

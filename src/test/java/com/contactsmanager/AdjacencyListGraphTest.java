@@ -1,0 +1,43 @@
+package com.contactsmanager;
+
+import com.contactsmanager.DataStructures.Graph;
+import com.contactsmanager.model.Contact;
+
+public class AdjacencyListGraphTest {
+    public static void main(String[] args) {
+        // Create a new Graph object
+        Graph graph = new Graph();
+
+        // Create some contacts
+        Contact contact1 = new Contact("John", 123);
+        Contact contact2 = new Contact("Jane", 456);
+        Contact contact3 = new Contact("Jack", 789);
+
+        // Add contacts to the graph
+        graph.addContact(contact1);
+        graph.addContact(contact2);
+        graph.addContact(contact3);
+
+        System.out.println("\n======== Test Adding and Searching contacts ========");
+        System.out.println("Searching for John: " + graph.searchContact("John"));  // Should return contact1
+        System.out.println("Searching for non-existing contact: " + graph.searchContact("Max"));  // Should return null
+
+        System.out.println("\n======== Test Adding a Connection ========");
+        graph.addConnection("John", "Jane");
+        System.out.println("John's friends: " + graph.suggestContacts("John"));  // Should include Jane
+
+        System.out.println("\n======== Test Removing a Connection ========");
+        graph.removeConnection("John", "Jane");
+        System.out.println("John's friends after removal: " + graph.suggestContacts("John"));  // Should not include Jane
+
+        System.out.println("\n======== Test Deleting contact ========");
+        graph.deleteContact("Jack");
+        System.out.println("Searching for Jack after deletion: " + graph.searchContact("Jack"));  // Should return null
+
+        System.out.println("\n======== Test DFS and BFS ========");
+        System.out.println("DFS traversal from John:");
+        graph.dfsTraversal(contact1);
+        System.out.println("\nBFS traversal from John:");
+        graph.bfsTraversal(contact1);
+    }
+}

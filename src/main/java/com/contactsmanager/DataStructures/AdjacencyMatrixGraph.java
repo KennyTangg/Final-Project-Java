@@ -1,3 +1,4 @@
+package com.contactsmanager.DataStructures;
 import java.util.LinkedList;
 
 public class AdjacencyMatrixGraph {

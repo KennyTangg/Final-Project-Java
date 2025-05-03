@@ -1,8 +1,6 @@
-package com.contactsmanager.interfaces;
+package com.contactsmanager;
 
-import com.contactsmanager.model.Contact;
-
-// GRAPH implemented with ADJACENCY LIST implemented with HASHMAP
+import com.contactsmanager.interfaces.Graph;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -10,19 +8,24 @@ import java.util.Map;
 import java.util.Queue;
 
 public class Graph<T> {
-    Map<T, LinkedList<T>> adj = new HashMap<>();
-    boolean directed;
+    private Map<T, LinkedList<T>> adj = new HashMap<>();
+    private boolean directed;
 
-    Graph() {
+    public Graph() {
         directed = false; // Default is undirected
     }
 
-    Graph(boolean d) {
+    public Graph(boolean d) {
         directed = d; // Can be true or false
     }
 
-    // ADD CONNECTION (and NODE)
-    void addEdge(T a, T b) {
+    // ADD NODE
+    public void addNode(T a) {
+        adj.putIfAbsent(a, new LinkedList<>());
+    }
+
+    // ADD CONNECTION (and NODE if any is missing)
+    public void addEdge(T a, T b) {
         adj.putIfAbsent(a, new LinkedList<>()); // Add node a
         adj.putIfAbsent(b, new LinkedList<>()); // Add node b
         adj.get(a).add(b); // Add edge a->b
@@ -32,7 +35,7 @@ public class Graph<T> {
     } // Time O(1), Space O(1)
 
     // DELETE CONNECTION
-    boolean removeEdge(T a, T b) {
+    public boolean removeEdge(T a, T b) {
         if (!adj.containsKey(a) || !adj.containsKey(b)) {
             return false; // Invalid input
         }
@@ -53,7 +56,7 @@ public class Graph<T> {
     /*To delete a node,
     you must first remove all edges connected to the node
     and then remove the node from the key set of adj. */
-    boolean removeNode(T a) {
+    public boolean removeNode(T a) {
         if (!adj.containsKey(a)) {
             return false;
         }
@@ -78,7 +81,7 @@ public class Graph<T> {
     The technique is called memoization,
     caching the result in a variable to prevent redundant computations.
     It resolves the issue of overlapping in recursion.*/
-    void dfsTraversal(T start) {
+    public void dfsTraversal(T start) {
         if (!adj.containsKey(start)) {
             return;
         }
@@ -86,7 +89,7 @@ public class Graph<T> {
         dfs(start, visited); // Call recursive method
     }
 
-    void dfs(T v, HashMap<T, Boolean> visited) {
+    private void dfs(T v, HashMap<T, Boolean> visited) {
         visited.put(v, true);
         System.out.print(v.toString() + " ");
         for (T neighbor : adj.get(v)) {
@@ -102,7 +105,7 @@ public class Graph<T> {
     /* when searching in a large graph, BFS is preferred.
     The BFS algorithm searches the nodes close to the starting point first,
     making it ideal for finding the shortest path.*/
-    void bfsTraversal(T start) {
+    public void bfsTraversal(T start) {
         if (!adj.containsKey(start)) {
             return;
         }
@@ -123,4 +126,12 @@ public class Graph<T> {
     } // Time O(V+E), Space O(V) used for queue
     // V is the number of nodes,
     // E is the number of edges
+
+    // PRINT CONTACT
+    public void printContact() {
+        for (T node : adj.keySet()) {
+            System.out.print(node + ":");
+            System.out.print(adj.get(node).toString());
+        }
+    }
 }

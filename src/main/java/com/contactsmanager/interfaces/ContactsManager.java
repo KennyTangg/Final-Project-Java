@@ -29,7 +29,7 @@ public interface ContactsManager {
      * Updates an existing contact's information.
      * @param contact The contact object with updated information
      */
-    void updateContact(Contact contact);
+    void updateContact(Contact contact, String newName, int newStudentId);
 
     /**
      * Retrieves all contacts stored in the system.

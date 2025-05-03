@@ -1,5 +1,7 @@
 package com.contactsmanager.model;
 
+import java.util.Objects;
+
 // Model represent a contant with Name and Student ID
 
 public class Contact {
@@ -57,4 +59,30 @@ public class Contact {
     public String toString() {
         return "Contact { name=' " + name + " ', studentId= " + studentId + " }";
     }
+
+    /**
+     * Determines if two contact objects are considered the same, 
+     * even if the instances are different.
+     * @return A boolean whether two contact objects are the same
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Contact)) return false;
+        Contact contact = (Contact) o;
+        return studentId == contact.studentId && name.equals(contact.name);
+    }
+
+    /**
+     * By default, Object.hashCode() gives each instance a unique hash.
+     * Without this override, even if two Contact objects have the same name and studentId, 
+     * they'd go to different buckets in a HashMap.
+     * Thus, the hashCode is overridden like this.
+     * @return A hash code as integer
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, studentId);
+    }
+
 }

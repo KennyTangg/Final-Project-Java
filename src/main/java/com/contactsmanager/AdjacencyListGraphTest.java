@@ -22,13 +22,17 @@ public class AdjacencyListGraphTest {
         System.out.println("Searching for John: " + graph.searchContact("John"));  // Should return contact1
         System.out.println("Searching for non-existing contact: " + graph.searchContact("Max"));  // Should return null
 
+        System.out.println("\n======== Test Updating a Contact ========");
+        graph.updateContact(contact1, "Justin", 300);
+        System.out.println(contact1);
+
         System.out.println("\n======== Test Adding a Connection ========");
-        graph.addConnection("John", "Jane");
-        System.out.println("John's friends: " + graph.suggestContacts("John"));  // Should include Jane
+        graph.addConnection("Justin", "Jane");
+        System.out.println("John's friends: " + graph.suggestContacts("Justin"));  // Should include Jane
 
         System.out.println("\n======== Test Removing a Connection ========");
-        graph.removeConnection("John", "Jane");
-        System.out.println("John's friends after removal: " + graph.suggestContacts("John"));  // Should not include Jane
+        graph.removeConnection("Justin", "Jane");
+        System.out.println("John's friends after removal: " + graph.suggestContacts("Justin"));  // Should not include Jane
 
         System.out.println("\n======== Test Deleting contact ========");
         graph.deleteContact("Jack");

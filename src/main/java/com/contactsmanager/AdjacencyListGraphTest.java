@@ -26,13 +26,16 @@ public class AdjacencyListGraphTest {
         graph.updateContact(contact1, "Justin", 300);
         System.out.println(contact1);
 
+        System.out.println("\n======== Test Printing the contact list ========");
+        graph.printContact();
+
         System.out.println("\n======== Test Adding a Connection ========");
         graph.addConnection("Justin", "Jane");
-        System.out.println("John's friends: " + graph.suggestContacts("Justin"));  // Should include Jane
+        graph.printContact();
 
         System.out.println("\n======== Test Removing a Connection ========");
         graph.removeConnection("Justin", "Jane");
-        System.out.println("John's friends after removal: " + graph.suggestContacts("Justin"));  // Should not include Jane
+        graph.printContact(); // Should not include Jane
 
         System.out.println("\n======== Test Deleting contact ========");
         graph.deleteContact("Jack");

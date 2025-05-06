@@ -80,9 +80,9 @@ public class Contact {
      * Thus, the hashCode is overridden like this.
      * @return A hash code as integer
      */
-    @Override
-    public int hashCode() {
+    //@Override
+    /*public int hashCode() {
         return Objects.hash(name, studentId);
-    }
+    }*/
 
 }

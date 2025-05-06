@@ -44,9 +44,13 @@ public class Graph implements ContactsManager{
     public void updateContact(Contact contact, String newName, int newStudentId) {
         Contact target = searchContact(contact.getName());
         if (target != null) {
+            //LinkedList<Contact> transferFriends = adj.get(target);
             contact.setName(newName);
             contact.setStudentId(newStudentId);
+            //Set adj's pointer to transferFriends
         }
+        //TODO: need to change other people too
+
     }
 
     // ADD CONNECTION -OK
@@ -175,8 +179,8 @@ public class Graph implements ContactsManager{
     // PRINT CONTACT
     public void printContact() {
         for (Contact node : adj.keySet()) {
-            System.out.print(node.toString() + ":");
-            System.out.print(adj.get(node).toString());
+            System.out.print(node.toString() + ": ");
+            System.out.println(adj.get(node));
         }
     }
 

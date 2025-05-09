@@ -5,6 +5,7 @@ package com.contactsmanager.DataStructures;
 import com.contactsmanager.interfaces.ContactsManager;
 import com.contactsmanager.model.Contact;
 
+import java.sql.SQLOutput;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -166,6 +167,19 @@ public class AdjacencyMatrixGraph implements ContactsManager{
         }
 
         return recommendedContacts;
+    }
+
+    // PRINT CONTACT
+    public void printContact() {
+        for (int i = 0; i < size; i++) { // Print person
+            System.out.print(i + ") " + contactsBook[i] + " : ");
+            for (int j = 0; j < size; j++) {
+                if (matrix[i][j] == 1) {
+                    System.out.println(j + ", ");
+                }
+            }
+            System.out.println();
+        }
     }
 
 

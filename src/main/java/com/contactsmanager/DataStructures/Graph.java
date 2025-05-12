@@ -30,7 +30,7 @@ public class Graph implements ContactsManager{
     // SEARCH NODE -OK
     @Override
     public Contact searchContact(String name) {
-        for (Contact contact : adj.keySet()) { // Remove edges to the contact for whole contact list
+        for (Contact contact : adj.keySet()) { // Find contact
             if (contact.getName().equals(name)) {
                 return contact;
             }
@@ -44,12 +44,19 @@ public class Graph implements ContactsManager{
     public void updateContact(Contact contact, String newName, int newStudentId) {
         Contact target = searchContact(contact.getName());
         if (target != null) {
-            //LinkedList<Contact> transferFriends = adj.get(target);
             contact.setName(newName);
             contact.setStudentId(newStudentId);
-            //Set adj's pointer to transferFriends
         }
-        //TODO: need to change other people too
+        //FIXED: need to change other people too
+        // Update all adjacency lists that reference the old contact
+        for (Map.Entry<Contact, LinkedList<Contact>> entry : adj.entrySet()) {
+            LinkedList<Contact> list = entry.getValue();
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).equals(contact)) {
+                    list.set(i, target); // Point to updated object
+                }
+            }
+        }
 
     }
 

@@ -12,10 +12,6 @@ import com.contactsmanager.model.Contact;
 
 public class Hash implements ContactsManager {
 
-    //CRUD
-    //Create, Read, Update, Delete
-
-    //List<Contact> -> the connections that a Contact(Model) Have
     private Map<Contact, List<Contact>> hash = new HashMap<>();
 
 
@@ -25,7 +21,6 @@ public class Hash implements ContactsManager {
 
     @Override
     public void addContact(Contact contact) {
-        //Verification, Guard Clause, validation
         if (hash.containsKey(contact)) {
             System.out.println("Already Exists");
             return;

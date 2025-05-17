@@ -5,7 +5,7 @@ package com.contactsmanager.DataStructures;
 import com.contactsmanager.interfaces.ContactsManager;
 import com.contactsmanager.model.Contact;
 
-import java.sql.SQLOutput;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -113,7 +113,13 @@ public class AdjacencyMatrixGraph implements ContactsManager{
     // LIST ALL CONTACTS -OK
     @Override
     public List<Contact> listAllContacts() {
-        return List.of(contactsBook);
+        List<Contact> result = new ArrayList<>();
+        for (Contact contact : contactsBook) {
+            if (contact != null) {
+                result.add(contact);
+            }
+        }
+        return result;
     }
 
     // ADD CONNECTION -OK

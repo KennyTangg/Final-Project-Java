@@ -10,7 +10,7 @@ public class Contact {
 
     /**
      * Constructs a new Contact with the specified name and student ID.
-     * 
+     *
      * @param name The name of the contact
      * @param studentId The student ID of the contact
      */
@@ -61,7 +61,7 @@ public class Contact {
     }
 
     /**
-     * Determines if two contact objects are considered the same, 
+     * Determines if two contact objects are considered the same,
      * even if the instances are different.
      * @return A boolean whether two contact objects are the same
      */
@@ -70,19 +70,30 @@ public class Contact {
         if (this == o) return true;
         if (!(o instanceof Contact)) return false;
         Contact contact = (Contact) o;
-        return studentId == contact.studentId && name.equals(contact.name);
+
+        // Compare student IDs
+        if (studentId != contact.studentId) return false;
+
+        // Compare names, handling null values and trimming whitespace
+        if (name == null) {
+            return contact.name == null;
+        } else {
+            return name.trim().equalsIgnoreCase(contact.name == null ? null : contact.name.trim());
+        }
     }
 
     /**
      * By default, Object.hashCode() gives each instance a unique hash.
-     * Without this override, even if two Contact objects have the same name and studentId, 
+     * Without this override, even if two Contact objects have the same name and studentId,
      * they'd go to different buckets in a HashMap.
      * Thus, the hashCode is overridden like this.
      * @return A hash code as integer
      */
-    //@Override
-    /*public int hashCode() {
-        return Objects.hash(name, studentId);
-    }*/
+    @Override
+    public int hashCode() {
+        // Use the trimmed, lowercase name for hash code calculation to be consistent with equals
+        String normalizedName = name == null ? null : name.trim().toLowerCase();
+        return Objects.hash(normalizedName, studentId);
+    }
 
 }

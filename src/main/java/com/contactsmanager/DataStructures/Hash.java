@@ -81,16 +81,21 @@ public class Hash implements ContactsManager {
             return;
         }
 
-        hash.remove(contactToUpdate);
-        Contact newContact = new Contact(newName, newStudentId);
+        // Get the old connections BEFORE removing the contact
         List<Contact> oldConnections = hash.get(contactToUpdate);
+
+        // Create the new contact
+        Contact newContact = new Contact(newName, newStudentId);
+
+        // Remove the old contact
+        hash.remove(contactToUpdate);
+
+        // Add the new contact with the old connections
         hash.put(newContact, oldConnections);
 
-        //Update for each existing connnections
+        //Update for each existing connections
         for (List<Contact> temp : hash.values()) { //iterate our hashmap, access each connections
-
             for (int i = 0; i < temp.size(); i++) { //iterate each connections list, find the old data
-
                 if (temp.get(i).equals(contactToUpdate)) {//update with new data
                     temp.set(i, newContact);
                 }
@@ -110,6 +115,7 @@ public class Hash implements ContactsManager {
 
         if (c1 == null || c2 == null) {
             System.out.println("One or both contacts are null");
+            return;
         }
 
         if (!hash.get(c1).contains(c2)) {
@@ -128,6 +134,7 @@ public class Hash implements ContactsManager {
 
         if (c1 == null || c2 == null) {
             System.out.println("One or both contacts are null");
+            return; // Added return statement to prevent NullPointerException
         }
 
         hash.get(c1).remove(c2);

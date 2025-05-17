@@ -1,12 +1,15 @@
-package com.contactsmanager;
+package com.contactsmanager.test;
 
-import com.contactsmanager.DataStructures.Graph;
+import com.contactsmanager.DataStructures.AdjacencyMatrixGraph;
 import com.contactsmanager.model.Contact;
 
-public class AdjacencyListGraphTest {
+/**
+ * Test class for the AdjacencyMatrixGraph implementation.
+ */
+public class AdjacencyMatrixTest {
     public static void main(String[] args) {
-        // Create a new Graph object
-        Graph graph = new Graph();
+        // Create a new AdjacencyMatrixGraph object with capacity of 10
+        AdjacencyMatrixGraph graph = new AdjacencyMatrixGraph(10);
 
         // Create some contacts
         Contact contact1 = new Contact("John", 123);
@@ -35,16 +38,18 @@ public class AdjacencyListGraphTest {
 
         System.out.println("\n======== Test Removing a Connection ========");
         graph.removeConnection("Justin", "Jane");
-        graph.printContact(); // Should not include Jane
+        graph.printContact();
 
         System.out.println("\n======== Test Deleting contact ========");
         graph.deleteContact("Jack");
         System.out.println("Searching for Jack after deletion: " + graph.searchContact("Jack"));  // Should return null
 
-        System.out.println("\n======== Test DFS and BFS ========");
-        System.out.println("DFS traversal from John:");
-        graph.dfsTraversal(contact1);
-        System.out.println("\nBFS traversal from John:");
-        graph.bfsTraversal(contact1);
+        // Test capacity limit
+        System.out.println("\n======== Test Capacity Limit ========");
+        for (int i = 0; i < 10; i++) {
+            Contact contact = new Contact("Test" + i, 1000 + i);
+            graph.addContact(contact);
+        }
+        graph.printContact();
     }
 }

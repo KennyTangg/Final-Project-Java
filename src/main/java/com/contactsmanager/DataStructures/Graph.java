@@ -63,15 +63,47 @@ public class Graph implements ContactsManager{
     // ADD CONNECTION -OK
     @Override
     public void addConnection(String contact1, String contact2) {
-        Contact nodeA = searchContact(contact1); // Search nodes
+        // Validate input
+        if (contact1 == null || contact2 == null) {
+            System.out.println("Contact names cannot be null");
+            return;
+        }
+
+        // Search for the contacts
+        Contact nodeA = searchContact(contact1);
         Contact nodeB = searchContact(contact2);
+
+        // Check if both contacts exist
         if (nodeA == null || nodeB == null) {
             System.out.println("Some nodes are missing/ doesn't exist.");
+            return; // Return early if either contact is not found
         }
-        adj.get(nodeA).add(nodeB); // Add edge a->b
+
+        // Check if the contacts are in the adjacency map
+        if (!adj.containsKey(nodeA) || !adj.containsKey(nodeB)) {
+            System.out.println("Some nodes are not in the graph.");
+            return;
+        }
+
+        // Add the connection
+        LinkedList<Contact> neighborsOfA = adj.get(nodeA);
+        if (neighborsOfA == null) {
+            neighborsOfA = new LinkedList<>();
+            adj.put(nodeA, neighborsOfA);
+        }
+        neighborsOfA.add(nodeB); // Add edge a->b
+
+        // If undirected, add the reverse connection
         if (!directed) {
-            adj.get(nodeB).add(nodeA); // Add edge b->a
+            LinkedList<Contact> neighborsOfB = adj.get(nodeB);
+            if (neighborsOfB == null) {
+                neighborsOfB = new LinkedList<>();
+                adj.put(nodeB, neighborsOfB);
+            }
+            neighborsOfB.add(nodeA); // Add edge b->a
         }
+
+        System.out.println("Connection added between " + contact1 + " and " + contact2);
     } // Time O(V), Space O(1)
 
 

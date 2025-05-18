@@ -38,7 +38,7 @@ public class AdjacencyMatrixGraph implements ContactsManager{
     @Override
     public Contact searchContact(String name) {
         for (Contact contact : contactsBook) {
-            if (contact.getName().equals(name)) {
+            if (contact != null && contact.getName().equals(name)) {
                 return contact;
             }
         }
@@ -50,7 +50,7 @@ public class AdjacencyMatrixGraph implements ContactsManager{
     private int searchIndexOfContact(String name) {
         int i = 0;
         for (Contact contact : contactsBook) {
-            if (contact.getName().equals(name)) {
+            if (contact != null && contact.getName().equals(name)) {
                 return i;
             }
             i++;
@@ -90,6 +90,12 @@ public class AdjacencyMatrixGraph implements ContactsManager{
     public void deleteContact(String name) {
         int target = searchIndexOfContact(name);
 
+        // Check if contact exists
+        if (target == -1) {
+            System.out.println("Contact not found: " + name);
+            return;
+        }
+
         for (int i = 0; i < maxSize; i++){ // Delete connections
             matrix[i][target] = 0;
         }
@@ -106,6 +112,13 @@ public class AdjacencyMatrixGraph implements ContactsManager{
     public void updateContact(Contact contact, String newName, int newStudentId) {
         String name = contact.getName();
         int target = searchIndexOfContact(name);
+
+        // Check if contact exists
+        if (target == -1) {
+            System.out.println("Contact not found: " + name);
+            return;
+        }
+
         Contact newContact = new Contact(newName, newStudentId); // Make new contact to replace old one
         contactsBook[target] = newContact;
     }
@@ -127,6 +140,13 @@ public class AdjacencyMatrixGraph implements ContactsManager{
     public void addConnection(String contact1, String contact2) {
         int yIndex = searchIndexOfContact(contact1); // Find index of both strings for the matrix
         int xIndex = searchIndexOfContact(contact2);
+
+        // Check if both contacts exist
+        if (yIndex == -1 || xIndex == -1) {
+            System.out.println("One or both contacts not found. Cannot add connection.");
+            return;
+        }
+
         matrix[yIndex][xIndex] = 1;
         if (!directed) { // Undirected graph
             matrix[xIndex][yIndex] = 1;
@@ -138,6 +158,13 @@ public class AdjacencyMatrixGraph implements ContactsManager{
     public void removeConnection(String contact1, String contact2) {
         int yIndex = searchIndexOfContact(contact1); // Find index of both strings for the matrix
         int xIndex = searchIndexOfContact(contact2);
+
+        // Check if both contacts exist
+        if (yIndex == -1 || xIndex == -1) {
+            System.out.println("One or both contacts not found. Cannot remove connection.");
+            return;
+        }
+
         matrix[yIndex][xIndex] = 0;
         if (!directed) { // Undirected graph
             matrix[xIndex][yIndex] = 0;
@@ -152,6 +179,12 @@ public class AdjacencyMatrixGraph implements ContactsManager{
         LinkedList<Contact> recommendedContacts = new LinkedList<>();
         int target = searchIndexOfContact(contact);
 
+        // Check if contact exists
+        if (target == -1) {
+            System.out.println("Contact not found: " + contact);
+            return recommendedContacts; // Return empty list
+        }
+
         for (int i = 0; i < maxSize; i++) { // Find person's friends (by index)
             if (matrix[target][i] == 1) {
                 directConnectionsIndex.add(i);
@@ -159,7 +192,7 @@ public class AdjacencyMatrixGraph implements ContactsManager{
         }
         if (directConnectionsIndex.isEmpty()) {
             System.out.println("Unable to suggest contacts from not knowing anyone.");
-            return null;
+            return recommendedContacts; // Return empty list instead of null
         }
         for (int directConnection : directConnectionsIndex) { // Find friend's friends (by index)
             for (int i = 0; i < maxSize; i++) {
@@ -169,7 +202,10 @@ public class AdjacencyMatrixGraph implements ContactsManager{
             }
         }
         for (int suggested : recommendedContactsIndex) { // Change indexes to contact
-            recommendedContacts.add(contactsBook[suggested]);
+            Contact suggestedContact = contactsBook[suggested];
+            if (suggestedContact != null) {
+                recommendedContacts.add(suggestedContact);
+            }
         }
 
         return recommendedContacts;

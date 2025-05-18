@@ -2,6 +2,7 @@ package com.contactsmanager.performance;
 
 import com.contactsmanager.interfaces.ContactsManager;
 import com.contactsmanager.model.Contact;
+import com.contactsmanager.visualization.VisualizationLauncher;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -163,18 +164,18 @@ public class DataStructureComparator {
         for (int i = 0; i < dataStructures.size(); i++) {
             ContactsManager ds = dataStructures.get(i);
             String name = dataStructureNames.get(i);
-            
+
             PerformanceMetric metric = PerformanceMeasurement.measureAverage(
                 () -> operation.accept(ds),
                 name,
                 operationName,
                 runs
             );
-            
+
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(metric);
             System.out.println(metric);
         }
-        
+
         return this;
     }
 
@@ -190,18 +191,18 @@ public class DataStructureComparator {
         for (int i = 0; i < dataStructures.size(); i++) {
             ContactsManager ds = dataStructures.get(i);
             String name = dataStructureNames.get(i);
-            
+
             PerformanceMeasurement.MeasuredResult<T> measuredResult = PerformanceMeasurement.measureWithResult(
                 () -> operation.apply(ds),
                 name,
                 operationName
             );
-            
+
             PerformanceMetric metric = measuredResult.getMetric();
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(metric);
             System.out.println(metric);
         }
-        
+
         return this;
     }
 
@@ -218,8 +219,8 @@ public class DataStructureComparator {
      * Prints a summary of the performance comparison results.
      */
     public void printSummary() {
-        System.out.println("\n===== Performance Comparison Summary =====");
-        
+        System.out.println("\n===== PERFORMANCE METRICS SUMMARY =====");
+
         // Find all unique operation names
         List<String> operations = new ArrayList<>();
         for (Map<String, List<PerformanceMetric>> dsResults : results.values()) {
@@ -229,53 +230,40 @@ public class DataStructureComparator {
                 }
             }
         }
-        
-        // Print header
-        System.out.print("Operation");
-        for (String dsName : dataStructureNames) {
-            System.out.print("\t| " + dsName + " (time ms)");
-            System.out.print("\t| " + dsName + " (memory KB)");
-        }
-        System.out.println();
-        
-        // Print separator
-        System.out.print("-".repeat(10));
-        for (int i = 0; i < dataStructureNames.size(); i++) {
-            System.out.print("-".repeat(40));
-        }
-        System.out.println();
-        
-        // Print results for each operation
+
+        // Print results for each operation and data structure
         for (String op : operations) {
-            System.out.print(op);
-            
             for (String dsName : dataStructureNames) {
                 Map<String, List<PerformanceMetric>> dsResults = results.get(dsName);
                 List<PerformanceMetric> metrics = dsResults.get(op);
-                
+
                 if (metrics != null && !metrics.isEmpty()) {
                     // Calculate average time and memory
                     double avgTime = metrics.stream()
                         .mapToDouble(PerformanceMetric::getExecutionTimeMillis)
                         .average()
                         .orElse(0);
-                    
+
                     double avgMemory = metrics.stream()
                         .mapToDouble(PerformanceMetric::getMemoryUsedKB)
                         .average()
                         .orElse(0);
-                    
-                    System.out.printf("\t| %.3f", avgTime);
-                    System.out.printf("\t| %.2f", avgMemory);
-                } else {
-                    System.out.print("\t| N/A");
-                    System.out.print("\t| N/A");
+
+                    System.out.printf("[TEST DATA] %s - %s: Time: %.3f ms, Memory: %.2f KB\n",
+                        dsName, op, avgTime, avgMemory);
                 }
             }
-            
-            System.out.println();
         }
-        
+
         System.out.println("========================================");
+    }
+
+    /**
+     * Visualizes the performance comparison results using the specified visualization type.
+     *
+     * @param visualizationType The type of visualization to use
+     */
+    public void visualize(VisualizationLauncher.VisualizationType visualizationType) {
+        VisualizationLauncher.launchVisualization(visualizationType, results);
     }
 }

@@ -16,8 +16,8 @@ import java.util.Random;
  * Performance test class that uses CSV data for testing.
  */
 public class CSVPerformanceTest {
-    private static final int DEFAULT_RUNS = 5;
-    private static final int DEFAULT_MATRIX_SIZE = 2000; // Increased for larger datasets
+    private static final int RUNS = 5;
+    private static final int MATRIX_SIZE = 2000;
     private static final Random random = new Random();
 
     /**
@@ -45,11 +45,11 @@ public class CSVPerformanceTest {
         try {
             // Create data structures
             Graph graph = new Graph();
-            AdjacencyMatrixGraph matrixGraph = new AdjacencyMatrixGraph(DEFAULT_MATRIX_SIZE);
+            AdjacencyMatrixGraph matrixGraph = new AdjacencyMatrixGraph(MATRIX_SIZE);
             Hash hash = new Hash();
 
             // Create comparator
-            DataStructureComparator comparator = new DataStructureComparator(DEFAULT_RUNS)
+            DataStructureComparator comparator = new DataStructureComparator(RUNS)
                 .addDataStructure(graph, "Adjacency List")
                 .addDataStructure(matrixGraph, "Adjacency Matrix")
                 .addDataStructure(hash, "HashMap");

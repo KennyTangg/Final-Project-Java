@@ -2,6 +2,7 @@ package com.contactsmanager;
 
 import com.contactsmanager.performance.CSVPerformanceTest;
 import com.contactsmanager.performance.PerformanceTest;
+import com.contactsmanager.visualization.VisualizationLauncher;
 
 /**
  * A simple runner class for performance tests.
@@ -10,40 +11,15 @@ import com.contactsmanager.performance.PerformanceTest;
 public class PerformanceTestRunner {
     public static void main(String[] args) {
         if (args.length == 0) {
-            // Run basic test if no arguments provided
-            PerformanceTest.runBasicTest();
+            // Show usage information if no arguments provided
+            System.out.println("Usage: java PerformanceTestRunner [test-type] [options]");
+            System.out.println("Available test types: custom, csv, visualize");
             return;
         }
 
         String testType = args[0].toLowerCase();
 
         switch (testType) {
-            case "basic":
-                PerformanceTest.runBasicTest();
-                break;
-
-            case "comprehensive":
-                int contactCount = 100; // Default
-                int density = 20; // Default
-
-                if (args.length > 1) {
-                    try {
-                        contactCount = Integer.parseInt(args[1]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Invalid contact count. Using default: " + contactCount);
-                    }
-                }
-
-                if (args.length > 2) {
-                    try {
-                        density = Integer.parseInt(args[2]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Invalid density. Using default: " + density);
-                    }
-                }
-
-                PerformanceTest.runComprehensiveTest(contactCount, density);
-                break;
 
             case "custom":
                 if (args.length < 3) {
@@ -77,9 +53,24 @@ public class PerformanceTestRunner {
                 CSVPerformanceTest.runCSVTest(contactsFilePath, connectionsFilePath);
                 break;
 
+            case "visualize":
+                runVisualizationDemo();
+                break;
+
             default:
                 System.err.println("Unknown test type: " + testType);
-                System.err.println("Available test types: basic, comprehensive, custom, csv");
+                System.err.println("Available test types: custom, csv, visualize");
         }
+    }
+
+    /**
+     * Runs a visualization test with sample data.
+     */
+    private static void runVisualizationDemo() {
+        System.out.println("Running visualization test...");
+
+        // Launch the CSV visualization directly, which will now only show pie charts
+        VisualizationLauncher.VisualizationType visualizationType = VisualizationLauncher.VisualizationType.CSV_VISUALIZATION;
+        VisualizationLauncher.launchVisualization(visualizationType, null);
     }
 }

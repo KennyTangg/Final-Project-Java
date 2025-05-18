@@ -1,6 +1,6 @@
 # Contacts Manager - Data Structure Performance Comparison
 
-This project implements a contacts management system using different data structures and provides tools to compare their performance.
+This project implements a contacts management system using different data structures and provides tools to compare their performance. It includes a basic JavaFX application for visualization.
 
 ## Project Structure
 
@@ -15,17 +15,20 @@ src/
 │               │   ├── Graph.java        # Adjacency List implementation
 │               │   └── Hash.java         # HashMap implementation
 │               ├── interfaces/           # Interfaces
+│               │   ├── ConnectionManager.java
 │               │   └── ContactsManager.java
 │               ├── model/                # Data models
 │               │   └── Contact.java
 │               ├── performance/          # Performance measurement tools
-│               │   ├── CSVPerformanceTest.java
 │               │   ├── DataStructureComparator.java
 │               │   ├── PerformanceMeasurement.java
 │               │   ├── PerformanceMetric.java
 │               │   └── PerformanceTest.java
 │               ├── utils/                # Utility classes
 │               │   └── CSVDataLoader.java
+│               ├── visualization/        # Visualization components
+│               │   ├── App.java          # Basic JavaFX application
+│               │   └── VisualizationLauncher.java
 │               ├── Main.java             # Main application entry point
 │               └── PerformanceTestRunner.java # Command-line runner for performance tests
 └── test/
@@ -34,7 +37,6 @@ src/
             └── contactsmanager/
                 └── test/                 # Test classes
                     ├── AdjacencyMatrixTest.java
-                    ├── AllDataStructuresTest.java
                     ├── GraphTest.java
                     └── HashTest.java
 ```
@@ -77,7 +79,7 @@ java com.contactsmanager.Main
 
 This will launch the interactive menu where you can:
 - Run different performance tests
-- Try out demos of each data structure implementation
+- Launch the basic JavaFX application
 
 ### Performance Test Runner
 
@@ -86,16 +88,11 @@ java com.contactsmanager.PerformanceTestRunner [test-type] [options]
 ```
 
 Available test types:
-- `basic` - Runs a basic performance test with a small dataset
-- `comprehensive <contactCount> <density>` - Runs a comprehensive test with the specified number of contacts and connection density
 - `custom <contactCount> <operations>` - Runs a custom test with specific operations
-- `csv <contactsFilePath> <connectionsFilePath>` - Runs a test using data from CSV files
 
 Examples:
 ```
-java com.contactsmanager.PerformanceTestRunner comprehensive 500 30
 java com.contactsmanager.PerformanceTestRunner custom 100 add,search,list
-java com.contactsmanager.PerformanceTestRunner csv datas/Random_Names_List_100.csv datas/Random_Connections_List_100.csv
 ```
 
 ## Test Classes
@@ -114,8 +111,16 @@ The performance measurement framework includes:
 - `PerformanceMeasurement` - Utility for measuring performance
 - `DataStructureComparator` - Compares performance across different data structures
 - `PerformanceTest` - Predefined test scenarios
-- `CSVPerformanceTest` - Performance tests using CSV data
 - `CSVDataLoader` - Utility for loading contacts and connections from CSV files
+
+## Visualization
+
+The project includes a basic JavaFX application that can be launched from:
+- The main menu (option 2)
+
+The visualization components include:
+- `App` - A basic JavaFX application
+- `VisualizationLauncher` - Utility for launching the JavaFX application
 
 ## Contact Model
 

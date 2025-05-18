@@ -53,8 +53,6 @@ public class PerformanceTest {
             hash.addConnection(name1, name2);
         }
 
-        System.out.println("Setup complete. Starting performance tests...");
-
         // Run specified operations
         for (String operation : operations) {
             switch (operation.toLowerCase()) {
@@ -87,13 +85,9 @@ public class PerformanceTest {
                     System.out.println("Unknown operation: " + operation);
             }
         }
-
-        // Print a separator between test data and performance metrics
         System.out.println("\n----- End of Test Data Collection -----");
 
         // Print summary
         comparator.printSummary();
-
-        System.out.println("\nCustom performance test completed successfully.");
     }
 }

@@ -207,15 +207,6 @@ public class DataStructureComparator {
     }
 
     /**
-     * Gets the results of all performance comparisons.
-     *
-     * @return A map of data structure names to operation names to performance metrics
-     */
-    public Map<String, Map<String, List<PerformanceMetric>>> getResults() {
-        return results;
-    }
-
-    /**
      * Prints a summary of the performance comparison results.
      */
     public void printSummary() {
@@ -254,16 +245,6 @@ public class DataStructureComparator {
                 }
             }
         }
-
         System.out.println("========================================");
-    }
-
-    /**
-     * Visualizes the performance comparison results using the specified visualization type.
-     *
-     * @param visualizationType The type of visualization to use
-     */
-    public void visualize(VisualizationLauncher.VisualizationType visualizationType) {
-        VisualizationLauncher.launchVisualization(visualizationType, results);
     }
 }

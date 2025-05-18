@@ -1,8 +1,6 @@
 package com.contactsmanager;
 
-import com.contactsmanager.performance.CSVPerformanceTest;
 import com.contactsmanager.performance.PerformanceTest;
-import com.contactsmanager.visualization.VisualizationLauncher;
 
 /**
  * A simple runner class for performance tests.
@@ -39,38 +37,9 @@ public class PerformanceTestRunner {
                 String[] operations = args[2].split(",");
                 PerformanceTest.runCustomTest(customContactCount, operations);
                 break;
-
-            case "csv":
-                if (args.length < 3) {
-                    System.err.println("CSV test requires contact file path and connection file path.");
-                    System.err.println("Usage: java PerformanceTestRunner csv <contactsFilePath> <connectionsFilePath>");
-                    return;
-                }
-
-                String contactsFilePath = args[1];
-                String connectionsFilePath = args[2];
-
-                CSVPerformanceTest.runCSVTest(contactsFilePath, connectionsFilePath);
-                break;
-
-            case "visualize":
-                runVisualizationDemo();
-                break;
-
             default:
                 System.err.println("Unknown test type: " + testType);
                 System.err.println("Available test types: custom, csv, visualize");
         }
-    }
-
-    /**
-     * Runs a visualization test with sample data.
-     */
-    private static void runVisualizationDemo() {
-        System.out.println("Running visualization test...");
-
-        // Launch the CSV visualization directly, which will now only show pie charts
-        VisualizationLauncher.VisualizationType visualizationType = VisualizationLauncher.VisualizationType.CSV_VISUALIZATION;
-        VisualizationLauncher.launchVisualization(visualizationType, null);
     }
 }

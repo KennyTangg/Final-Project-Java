@@ -67,14 +67,10 @@ public class Main {
     }
 
     private static void runVisualizationDemo() {
-        System.out.println("\nVisualization Demo");
-        System.out.println("------------------");
-        System.out.println("Launching CSV Data Visualization with Pie Chart...");
-        System.out.println("Please select CSV files in the file dialog that will appear.");
+        System.out.println("Launching Basic JavaFX Application...");
 
-        // Launch the CSV visualization directly, which will now only show pie charts
-        VisualizationLauncher.VisualizationType visualizationType = VisualizationLauncher.VisualizationType.CSV_VISUALIZATION;
-        VisualizationLauncher.launchVisualization(visualizationType, null);
+        // Launch the basic JavaFX application
+        VisualizationLauncher.launchApp();
     }
 
     private static int getIntInput() {

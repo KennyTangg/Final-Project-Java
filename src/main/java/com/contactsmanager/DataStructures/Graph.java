@@ -1,5 +1,6 @@
 package com.contactsmanager.DataStructures;
 
+import com.contactsmanager.interfaces.ConnectionsManager;
 import com.contactsmanager.interfaces.ContactsManager;
 import com.contactsmanager.model.Contact;
 
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-public class Graph implements ContactsManager{
+public class Graph implements ContactsManager, ConnectionsManager{
     private Map<Contact, LinkedList<Contact>> adj = new HashMap<>();
     private boolean directed;
 

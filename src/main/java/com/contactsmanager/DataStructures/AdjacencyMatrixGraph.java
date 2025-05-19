@@ -2,6 +2,7 @@
 
 package com.contactsmanager.DataStructures;
 
+import com.contactsmanager.interfaces.ConnectionsManager;
 import com.contactsmanager.interfaces.ContactsManager;
 import com.contactsmanager.model.Contact;
 
@@ -11,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class AdjacencyMatrixGraph implements ContactsManager{
+public class AdjacencyMatrixGraph implements ContactsManager, ConnectionsManager {
     int size;
     int maxSize;
     byte[][] matrix; // Where the connections are stored

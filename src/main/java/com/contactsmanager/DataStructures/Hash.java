@@ -7,10 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.contactsmanager.interfaces.ConnectionsManager;
 import com.contactsmanager.interfaces.ContactsManager;
 import com.contactsmanager.model.Contact;
 
-public class Hash implements ContactsManager {
+public class Hash implements ContactsManager, ConnectionsManager {
+    // UPDATE: That's if hashmap implements connections manager.
 
     private Map<Contact, List<Contact>> hash = new HashMap<>();
 

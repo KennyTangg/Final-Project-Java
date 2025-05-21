@@ -28,9 +28,9 @@ public class PerformanceTest {
 
         // Create comparator
         DataStructureComparator comparator = new DataStructureComparator(DEFAULT_RUNS)
-            .addDataStructure(graph, "Adjacency List")
-            .addDataStructure(matrixGraph, "Adjacency Matrix")
-            .addDataStructure(hash, "HashMap");
+            .addDataStructure(graph, graph,"Adjacency List")
+            .addDataStructure(matrixGraph, matrixGraph, "Adjacency Matrix")
+            .addDataStructure(hash, hash,"HashMap");
 
         // Create contacts
         Contact[] contacts = new Contact[contactCount];

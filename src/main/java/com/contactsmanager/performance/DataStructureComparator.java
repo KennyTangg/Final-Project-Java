@@ -1,6 +1,7 @@
 package com.contactsmanager.performance;
 
 import com.contactsmanager.interfaces.ContactsManager;
+import com.contactsmanager.interfaces.ConnectionsManager;
 import com.contactsmanager.model.Contact;
 import com.contactsmanager.visualization.VisualizationLauncher;
 
@@ -15,8 +16,12 @@ import java.util.function.Function;
  * A utility class for comparing the performance of different data structure implementations.
  */
 public class DataStructureComparator {
-    private final List<ContactsManager> dataStructures;
-    private final List<String> dataStructureNames;
+    // Stores different implementations of contact management systems.
+    private final List<ContactsManager> contactStructures;
+    private final List<ConnectionsManager> connectionStructures; // NEW
+
+    // Names for each ContactsManager, used in logs and output.
+    private final List<String> structureNames;
     private final Map<String, Map<String, List<PerformanceMetric>>> results;
     private final int runs;
 
@@ -26,8 +31,9 @@ public class DataStructureComparator {
      * @param runs The number of runs to average over for each operation
      */
     public DataStructureComparator(int runs) {
-        this.dataStructures = new ArrayList<>();
-        this.dataStructureNames = new ArrayList<>();
+        this.contactStructures = new ArrayList<>();
+        this.connectionStructures = new ArrayList<>();
+        this.structureNames = new ArrayList<>();
         this.results = new HashMap<>();
         this.runs = runs;
     }
@@ -39,9 +45,10 @@ public class DataStructureComparator {
      * @param name The name of the data structure
      * @return This DataStructureComparator for method chaining
      */
-    public DataStructureComparator addDataStructure(ContactsManager dataStructure, String name) {
-        dataStructures.add(dataStructure);
-        dataStructureNames.add(name);
+    public DataStructureComparator addDataStructure(ContactsManager contactMgr, ConnectionsManager connMgr, String name) {
+        contactStructures.add(contactMgr);
+        connectionStructures.add(connMgr);
+        structureNames.add(name);
         results.put(name, new HashMap<>());
         return this;
     }
@@ -53,7 +60,7 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareAddContact(Contact contact) {
-        return compareOperation(
+        return compareContactOperation(
             "addContact",
             ds -> ds.addContact(contact)
         );
@@ -66,7 +73,7 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareSearchContact(String name) {
-        return compareOperationWithResult(
+        return compareContactOperationWithResult(
             "searchContact",
             ds -> ds.searchContact(name)
         );
@@ -79,7 +86,7 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareDeleteContact(String name) {
-        return compareOperation(
+        return compareContactOperation(
             "deleteContact",
             ds -> ds.deleteContact(name)
         );
@@ -94,7 +101,7 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareUpdateContact(Contact contact, String newName, int newStudentId) {
-        return compareOperation(
+        return compareContactOperation(
             "updateContact",
             ds -> ds.updateContact(contact, newName, newStudentId)
         );
@@ -106,7 +113,7 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareListAllContacts() {
-        return compareOperationWithResult(
+        return compareContactOperationWithResult(
             "listAllContacts",
             ContactsManager::listAllContacts
         );
@@ -120,9 +127,9 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareAddConnection(String contact1, String contact2) {
-        return compareOperation(
+        return compareConnectionOperation(
             "addConnection",
-            ds -> ds.addConnection(contact1, contact2)
+            cm -> cm.addConnection(contact1, contact2)
         );
     }
 
@@ -134,7 +141,7 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareRemoveConnection(String contact1, String contact2) {
-        return compareOperation(
+        return compareConnectionOperation(
             "removeConnection",
             ds -> ds.removeConnection(contact1, contact2)
         );
@@ -147,7 +154,7 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareSuggestContacts(String contact) {
-        return compareOperationWithResult(
+        return compareConnectionOperationWithResult(
             "suggestContacts",
             ds -> ds.suggestContacts(contact)
         );
@@ -160,10 +167,10 @@ public class DataStructureComparator {
      * @param operation The operation to perform
      * @return This DataStructureComparator for method chaining
      */
-    public DataStructureComparator compareOperation(String operationName, Consumer<ContactsManager> operation) {
-        for (int i = 0; i < dataStructures.size(); i++) {
-            ContactsManager ds = dataStructures.get(i);
-            String name = dataStructureNames.get(i);
+    public DataStructureComparator compareContactOperation(String operationName, Consumer<ContactsManager> operation) {
+        for (int i = 0; i < contactStructures.size(); i++) {
+            ContactsManager ds = contactStructures.get(i);
+            String name = structureNames.get(i);
 
             PerformanceMetric metric = PerformanceMeasurement.measureAverage(
                 () -> operation.accept(ds),
@@ -187,10 +194,10 @@ public class DataStructureComparator {
      * @param operation The operation to perform
      * @return This DataStructureComparator for method chaining
      */
-    public <T> DataStructureComparator compareOperationWithResult(String operationName, Function<ContactsManager, T> operation) {
-        for (int i = 0; i < dataStructures.size(); i++) {
-            ContactsManager ds = dataStructures.get(i);
-            String name = dataStructureNames.get(i);
+    public <T> DataStructureComparator compareContactOperationWithResult(String operationName, Function<ContactsManager, T> operation) {
+        for (int i = 0; i < contactStructures.size(); i++) {
+            ContactsManager ds = contactStructures.get(i);
+            String name = structureNames.get(i);
 
             PerformanceMeasurement.MeasuredResult<T> measuredResult = PerformanceMeasurement.measureWithResult(
                 () -> operation.apply(ds),
@@ -203,6 +210,42 @@ public class DataStructureComparator {
             System.out.println(metric);
         }
 
+        return this;
+    }
+
+    public DataStructureComparator compareConnectionOperation(String operationName, Consumer<ConnectionsManager> operation) {
+        for (int i = 0; i < connectionStructures.size(); i++) {
+            ConnectionsManager cm = connectionStructures.get(i);
+            String name = structureNames.get(i);
+
+            PerformanceMetric metric = PerformanceMeasurement.measureAverage(
+                    () -> operation.accept(cm),
+                    name,
+                    operationName,
+                    runs
+            );
+
+            results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(metric);
+            System.out.println(metric);
+        }
+        return this;
+    }
+
+    public <T> DataStructureComparator compareConnectionOperationWithResult(String operationName, Function<ConnectionsManager, T> operation) {
+        for (int i = 0; i < connectionStructures.size(); i++) {
+            ConnectionsManager cm = connectionStructures.get(i);
+            String name = structureNames.get(i);
+
+            PerformanceMeasurement.MeasuredResult<T> measuredResult = PerformanceMeasurement.measureWithResult(
+                    () -> operation.apply(cm),
+                    name,
+                    operationName
+            );
+
+            PerformanceMetric metric = measuredResult.getMetric();
+            results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(metric);
+            System.out.println(metric);
+        }
         return this;
     }
 
@@ -224,7 +267,7 @@ public class DataStructureComparator {
 
         // Print results for each operation and data structure
         for (String op : operations) {
-            for (String dsName : dataStructureNames) {
+            for (String dsName : structureNames) {
                 Map<String, List<PerformanceMetric>> dsResults = results.get(dsName);
                 List<PerformanceMetric> metrics = dsResults.get(op);
 

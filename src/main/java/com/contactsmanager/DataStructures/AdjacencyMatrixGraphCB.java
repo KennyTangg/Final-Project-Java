@@ -1,4 +1,6 @@
 // Unlike adjacency list, this one has a fixed limit/ capacity.
+// Uses 1s and 0s as bytes to tell the connection. Row = from, Column = to.
+// Does not matter if undirected.
 
 package com.contactsmanager.DataStructures;
 
@@ -12,14 +14,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class AdjacencyMatrixGraph implements ContactsManager, ConnectionsManager {
+public class AdjacencyMatrixGraphCB implements ContactsManager, ConnectionsManager {
     int size;
     int maxSize;
     byte[][] matrix; // Where the connections are stored
     Contact[] contactsBook; // Where the contact information are stored
     boolean directed;
 
-    public AdjacencyMatrixGraph(int maxSize) {
+    /**
+     * Constructor.
+     * @param maxSize maximum size of contacts
+     */
+    public AdjacencyMatrixGraphCB(int maxSize) {
         this.size = 0;
         this.maxSize = maxSize;
         matrix = new byte[maxSize][maxSize];
@@ -27,7 +33,7 @@ public class AdjacencyMatrixGraph implements ContactsManager, ConnectionsManager
         directed = false;
     }
 
-    public AdjacencyMatrixGraph(int maxSize, boolean directed) {
+    public AdjacencyMatrixGraphCB(int maxSize, boolean directed) {
         this.size = 0;
         this.maxSize = maxSize;
         matrix = new byte[maxSize][maxSize];

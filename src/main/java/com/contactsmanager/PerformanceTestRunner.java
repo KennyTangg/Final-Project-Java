@@ -3,8 +3,8 @@ package com.contactsmanager;
 import com.contactsmanager.performance.PerformanceTest;
 
 /**
- * A simple runner class for performance tests.
- * This class provides a convenient way to run performance tests from the command line.
+ * A runner class for performance tests.
+ * Run performance tests from the command line.
  */
 public class PerformanceTestRunner {
     public static void main(String[] args) {

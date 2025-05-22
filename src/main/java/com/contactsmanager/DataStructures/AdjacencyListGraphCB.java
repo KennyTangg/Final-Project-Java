@@ -10,15 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-public class Graph implements ContactsManager, ConnectionsManager{
+public class AdjacencyListGraphCB implements ContactsManager, ConnectionsManager{
     private Map<Contact, LinkedList<Contact>> adj = new HashMap<>();
     private boolean directed;
 
-    public Graph() {
+    public AdjacencyListGraphCB() {
         directed = false; // Default is undirected
     }
 
-    public Graph(boolean d) {
+    public AdjacencyListGraphCB(boolean d) {
         directed = d; // Can be true or false
     }
 

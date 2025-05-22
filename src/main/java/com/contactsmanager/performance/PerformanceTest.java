@@ -1,8 +1,8 @@
 package com.contactsmanager.performance;
 
-import com.contactsmanager.DataStructures.AdjacencyMatrixGraph;
-import com.contactsmanager.DataStructures.Graph;
-import com.contactsmanager.DataStructures.Hash;
+import com.contactsmanager.DataStructures.AdjacencyMatrixGraphCB;
+import com.contactsmanager.DataStructures.AdjacencyListGraphCB;
+import com.contactsmanager.DataStructures.HashMapCB;
 import com.contactsmanager.model.Contact;
 
 /**
@@ -22,15 +22,15 @@ public class PerformanceTest {
         System.out.println("Running custom performance test...");
 
         // Create data structures
-        Graph graph = new Graph();
-        AdjacencyMatrixGraph matrixGraph = new AdjacencyMatrixGraph(Math.max(contactCount, DEFAULT_MATRIX_SIZE));
-        Hash hash = new Hash();
+        AdjacencyListGraphCB graph = new AdjacencyListGraphCB();
+        AdjacencyMatrixGraphCB matrixGraph = new AdjacencyMatrixGraphCB(Math.max(contactCount, DEFAULT_MATRIX_SIZE));
+        HashMapCB hash = new HashMapCB();
 
         // Create comparator
         DataStructureComparator comparator = new DataStructureComparator(DEFAULT_RUNS)
             .addDataStructure(graph, graph,"Adjacency List")
             .addDataStructure(matrixGraph, matrixGraph, "Adjacency Matrix")
-            .addDataStructure(hash, hash,"HashMap");
+            .addDataStructure(hash,"HashMap");
 
         // Create contacts
         Contact[] contacts = new Contact[contactCount];
@@ -50,7 +50,6 @@ public class PerformanceTest {
 
             graph.addConnection(name1, name2);
             matrixGraph.addConnection(name1, name2);
-            hash.addConnection(name1, name2);
         }
 
         // Run specified operations

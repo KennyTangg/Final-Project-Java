@@ -39,7 +39,7 @@ public class DataStructureComparator {
     }
 
     /**
-     * Adds a data structure to be compared.
+     * Adds a data structure to be compared, for both contact-and-connections structures. (Graphs)
      *
      * @param dataStructure The data structure implementation
      * @param name The name of the data structure
@@ -52,6 +52,22 @@ public class DataStructureComparator {
         results.put(name, new HashMap<>());
         return this;
     }
+
+    /**
+     * Adds data structure to be compared, but for contact-only structures.
+     *
+     * @param contactMgr The data structure implementation
+     * @param name The name of the data structure
+     * @return This DataStructureComparator for method chaining
+     */
+    public DataStructureComparator addDataStructure(ContactsManager contactMgr, String name) {
+        contactStructures.add(contactMgr);
+        connectionStructures.add(null); // Placeholder
+        structureNames.add(name);
+        results.put(name, new HashMap<>());
+        return this;
+    }
+
 
     /**
      * Compares the performance of adding a contact across all data structures.
@@ -161,7 +177,7 @@ public class DataStructureComparator {
     }
 
     /**
-     * Compares the performance of a custom operation across all data structures.
+     * Compares the performance of a contact-bound operation across all data structures.
      *
      * @param operationName The name of the operation
      * @param operation The operation to perform
@@ -187,7 +203,7 @@ public class DataStructureComparator {
     }
 
     /**
-     * Compares the performance of a custom operation that returns a result across all data structures.
+     * Compares the performance of a contact-bound that returns a result across all data structures.
      *
      * @param <T> The type of the result
      * @param operationName The name of the operation
@@ -213,10 +229,22 @@ public class DataStructureComparator {
         return this;
     }
 
+    /**
+     * Compares the performance of a connection-bound operation across all data structures.
+     *
+     * @param operationName The name of the operation
+     * @param operation The operation to perform
+     * @return This DataStructureComparator for method chaining
+     */
     public DataStructureComparator compareConnectionOperation(String operationName, Consumer<ConnectionsManager> operation) {
         for (int i = 0; i < connectionStructures.size(); i++) {
             ConnectionsManager cm = connectionStructures.get(i);
             String name = structureNames.get(i);
+
+            if (cm == null) {
+                System.out.printf("[SKIPPED] %s - %s: No connection manager implemented.\n", name, operationName);
+                continue;
+            }
 
             PerformanceMetric metric = PerformanceMeasurement.measureAverage(
                     () -> operation.accept(cm),
@@ -231,6 +259,14 @@ public class DataStructureComparator {
         return this;
     }
 
+    /**
+     * Compares the performance of a connection-bound that returns a result across all data structures.
+     *
+     * @param <T> The type of the result
+     * @param operationName The name of the operation
+     * @param operation The operation to perform
+     * @return This DataStructureComparator for method chaining
+     */
     public <T> DataStructureComparator compareConnectionOperationWithResult(String operationName, Function<ConnectionsManager, T> operation) {
         for (int i = 0; i < connectionStructures.size(); i++) {
             ConnectionsManager cm = connectionStructures.get(i);

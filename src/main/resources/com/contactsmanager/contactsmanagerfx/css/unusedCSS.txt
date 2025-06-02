@@ -1,0 +1,16 @@
+
+.button {
+    -fx-background-color: #F2F2F2;
+    -fx-text-fill: black;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 4, 0, 2, 2);
+    -fx-cursor: hand;
+    -fx-padding: 8 16;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+/* Click (pressed) effect */
+.button:pressed {
+    -fx-background-color: #B6B09F;
+}

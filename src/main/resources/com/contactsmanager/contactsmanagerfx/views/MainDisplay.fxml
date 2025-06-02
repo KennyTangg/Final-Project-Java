@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.TextArea?>
+<GridPane hgap="10"
+          vgap="10"
+          xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="com.contactsmanager.contactsmanagerfx.AppDisplayController"
+          stylesheets="@../css/stylesheet.css"
+          fx:id="mainPane">
+
+    <!-- Row 0, Col 0: ChoiceBox -->
+    <ComboBox fx:id="viewSelector" prefWidth="400" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+
+    <!-- Row 0, Col 1: Label -->
+    <TextArea fx:id="outputArea" wrapText="true" GridPane.vgrow="ALWAYS" editable="false" prefRowCount="4" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+    <!-- Row 1, Col 0: TableView -->
+    <TableView fx:id="tableDisplay" prefWidth="400.0" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+
+    <!-- Row 1, Col 1: GridPane inside GridPane -->
+    <GridPane hgap="10" vgap="10" GridPane.columnIndex="1" GridPane.rowIndex="1">
+
+        <!-- SEARCH PERSON -->
+        <Label text="Search:" GridPane.rowIndex="1"/>
+        <TextField fx:id="searchNameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Button fx:id="searchButton" text="Search" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+
+        <!-- empty (spacer row) -->
+        <Pane prefHeight="30" GridPane.rowIndex="2" />
+
+        <!-- ADD PERSON -->
+        <Label text="Full name:" GridPane.rowIndex="3" />
+        <Label text="Student ID:" GridPane.rowIndex="4" />
+        <TextField fx:id="addNameField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+        <TextField fx:id="addIdField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        <Button fx:id="addButton" text="Add" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+
+        <!-- empty (spacer row) -->
+        <Pane prefHeight="30" GridPane.rowIndex="5" />
+
+        <!-- DELETE PERSON -->
+        <Label text="Full name:" GridPane.rowIndex="6" />
+        <TextField fx:id="deleteNameField" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+        <Button fx:id="deleteButton" text="Delete" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+
+        <!-- empty (spacer row) -->
+        <Pane prefHeight="30" GridPane.rowIndex="7" />
+
+        <!-- CHANGE NAME -->
+        <Label text="Old name:" GridPane.rowIndex="8" />
+        <Label text="New name:" GridPane.rowIndex="9" />
+        <Label text="New student ID:" GridPane.rowIndex="10" />
+        <TextField fx:id="oldNameField" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+        <TextField fx:id="newNameField" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+        <TextField fx:id="newIdField" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+        <Button fx:id="updateButton" text="Update" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+
+        <!-- empty (spacer row) -->
+        <Pane prefHeight="30" GridPane.rowIndex="11" />
+
+        <!-- ADD & DELETE CONNECTION -->
+        <Label text="Full name:" GridPane.rowIndex="12" />
+        <Label text="Full name:" GridPane.rowIndex="13" />
+        <TextField fx:id="connection1NameField" GridPane.columnIndex="1" GridPane.rowIndex="12" />
+        <TextField fx:id="connection2NameField" GridPane.columnIndex="1" GridPane.rowIndex="13" />
+        <Button fx:id="addConnectionButton" text="Add connection" GridPane.columnIndex="2" GridPane.rowIndex="12" />
+        <Button fx:id="removeConnectionButton" text="Remove connection" GridPane.columnIndex="2" GridPane.rowIndex="13" />
+
+        <!-- empty (spacer row) -->
+        <Pane prefHeight="30" GridPane.rowIndex="14" />
+
+        <!-- SUGGEST A CONTACT -->
+        <Label text="Full name:" GridPane.rowIndex="15" />
+        <TextField fx:id="suggestNameField" GridPane.columnIndex="1" GridPane.rowIndex="15" />
+        <Button fx:id="suggestButton" text="Suggest friends" GridPane.columnIndex="2" GridPane.rowIndex="15" />
+
+        <!-- START BFTraversal OR DFTraversal -->
+        <Button fx:id="bfsButton" text="Start breadth first traversal" GridPane.columnIndex="2" GridPane.rowIndex="16" />
+        <Button fx:id="dfsButton" text="Start depth first traversal" GridPane.columnIndex="2" GridPane.rowIndex="17" />
+
+    </GridPane>
+
+</GridPane>

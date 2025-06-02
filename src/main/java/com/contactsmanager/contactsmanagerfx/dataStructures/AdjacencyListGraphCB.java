@@ -14,17 +14,19 @@ import java.util.Queue;
  * This class is a Contacts Book that is implemented using Graph (made from Adjacency List).
  * It manages Contact nodes and their directed or undirected connections.
  * CB stands for Contacts Book.
+ *
+ * Extends AbstractGraphCB to inherit common graph functionality like
+ * directionality management, connection validation, and standardized messaging.
  */
-public class AdjacencyListGraphCB implements ContactsManager, ConnectionsManager{
+public class AdjacencyListGraphCB extends AbstractGraphCB implements ContactsManager, ConnectionsManager {
 
-    private final Map<Contact, LinkedList<Contact>> adj = new HashMap<>(); // Where our data is stored
-    private final boolean directed;
+    private final Map<Contact, LinkedList<Contact>> adj = new HashMap<>();
 
     /**
      * Constructs an undirected contact graph.
      */
     public AdjacencyListGraphCB() {
-        directed = false; // Default is undirected
+        super(); // Default is undirected
     }
 
     /**
@@ -32,7 +34,35 @@ public class AdjacencyListGraphCB implements ContactsManager, ConnectionsManager
      * @param directed Directed graph or not
      */
     public AdjacencyListGraphCB(boolean directed) {
-        this.directed = directed; // Can be true or false
+        super(directed);
+    }
+
+    @Override
+    protected boolean connectionExists(String contact1, String contact2) {
+        Contact nodeA = searchContact(contact1);
+        Contact nodeB = searchContact(contact2);
+
+        if (nodeA == null || nodeB == null) {
+            return false;
+        }
+
+        LinkedList<Contact> neighbors = adj.get(nodeA);
+        return neighbors != null && neighbors.contains(nodeB);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Contact[] getContactPair(String contact1Name, String contact2Name) {
+        Contact contact1 = searchContact(contact1Name);
+        Contact contact2 = searchContact(contact2Name);
+
+        if (contact1 == null || contact2 == null) {
+            return null;
+        }
+
+        return new Contact[]{contact1, contact2};
     }
 
     /*========================================================================*/

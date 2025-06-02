@@ -22,15 +22,22 @@ public class PerformanceTest {
         System.out.println("Running custom performance test...");
 
         // Create data structures
+        // Add extra capacity for test operations (add, update operations that might add new contacts)
+        int matrixCapacity = Math.max(contactCount + 10, DEFAULT_MATRIX_SIZE);
         AdjacencyListGraphCB graph = new AdjacencyListGraphCB();
-        AdjacencyMatrixGraphCB matrixGraph = new AdjacencyMatrixGraphCB(Math.max(contactCount, DEFAULT_MATRIX_SIZE));
+        AdjacencyMatrixGraphCB matrixGraph = new AdjacencyMatrixGraphCB(matrixCapacity);
         HashMapCB hash = new HashMapCB();
 
-        // Create comparator
-        DataStructureComparator comparator = new DataStructureComparator(DEFAULT_RUNS)
+        // Create comparator for all operations (includes HashMap)
+        DataStructureComparator allComparator = new DataStructureComparator(DEFAULT_RUNS)
                 .addDataStructure(graph, graph,"Adjacency List")
                 .addDataStructure(matrixGraph, matrixGraph, "Adjacency Matrix")
                 .addDataStructure(hash,"HashMap");
+
+        // Create comparator for connection operations (only first two data structures)
+        DataStructureComparator connectionComparator = new DataStructureComparator(DEFAULT_RUNS)
+                .addDataStructure(graph, graph,"Adjacency List")
+                .addDataStructure(matrixGraph, matrixGraph, "Adjacency Matrix");
 
         // Create contacts
         Contact[] contacts = new Contact[contactCount];
@@ -57,28 +64,31 @@ public class PerformanceTest {
             switch (operation.toLowerCase()) {
                 case "add":
                     Contact newContact = new Contact("TestContact", 9999);
-                    comparator.compareAddContact(newContact);
+                    allComparator.compareAddContact(newContact);
                     break;
                 case "search":
-                    comparator.compareSearchContact(contacts[0].getName());
+                    allComparator.compareSearchContact(contacts[0].getName());
                     break;
                 case "list":
-                    comparator.compareListAllContacts();
+                    allComparator.compareListAllContacts();
                     break;
                 case "suggest":
-                    comparator.compareSuggestContacts(contacts[0].getName());
+                    // Use connection comparator (only first two data structures)
+                    connectionComparator.compareSuggestContacts(contacts[0].getName());
                     break;
                 case "update":
-                    comparator.compareUpdateContact(contacts[0], "UpdatedContact", 8888);
+                    allComparator.compareUpdateContact(contacts[0], "UpdatedContact", 8888);
                     break;
                 case "delete":
-                    comparator.compareDeleteContact(contacts[contactCount - 1].getName());
+                    allComparator.compareDeleteContact(contacts[contactCount - 1].getName());
                     break;
                 case "addconnection":
-                    comparator.compareAddConnection(contacts[0].getName(), contacts[contactCount - 1].getName());
+                    // Use connection comparator (only first two data structures)
+                    connectionComparator.compareAddConnection(contacts[0].getName(), contacts[contactCount - 1].getName());
                     break;
                 case "removeconnection":
-                    comparator.compareRemoveConnection(contacts[0].getName(), contacts[1].getName());
+                    // Use connection comparator (only first two data structures)
+                    connectionComparator.compareRemoveConnection(contacts[0].getName(), contacts[1].getName());
                     break;
                 default:
                     System.out.println("Unknown operation: " + operation);
@@ -86,7 +96,8 @@ public class PerformanceTest {
         }
         System.out.println("\n----- End of Test Data Collection -----");
 
-        // Print summary
-        comparator.printSummary();
+        // Print summary for both comparators
+        allComparator.printSummary();
+        connectionComparator.printSummary();
     }
 }

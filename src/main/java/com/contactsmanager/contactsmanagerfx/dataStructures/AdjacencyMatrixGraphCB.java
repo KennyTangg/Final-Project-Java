@@ -14,13 +14,15 @@ import java.util.List;
  * Unlike adjacency list, this one has a fixed limit/ capacity.
  * Uses 1s and 0s as bytes to tell the connection. Row = from, Column = to.
  * CB stands for Contacts Book.
+ *
+ * Extends AbstractGraphCB to inherit common graph functionality like
+ * directionality management, connection validation, and standardized messaging.
  */
-public class AdjacencyMatrixGraphCB implements ContactsManager, ConnectionsManager {
+public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsManager, ConnectionsManager {
     int size;
     int maxSize;
     byte[][] matrix; // Where the connections are stored
     Contact[] contactsBook; // Where the contact information are stored
-    boolean directed;
 
     /**
      * Constructs an undirected contacts graph of maxSize size.
@@ -38,11 +40,44 @@ public class AdjacencyMatrixGraphCB implements ContactsManager, ConnectionsManag
      * @param directed Directed graph or not.
      */
     public AdjacencyMatrixGraphCB(int maxSize, boolean directed) {
+        super(directed); // Call parent constructor with directionality
         this.size = 0;
         this.maxSize = maxSize;
         matrix = new byte[maxSize][maxSize];
         contactsBook = new Contact[maxSize];
-        this.directed = directed;
+    }
+
+    /*========================================================================*/
+    /*===== Abstract Methods Implementation ==================================*/
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean connectionExists(String contact1, String contact2) {
+        int index1 = searchIndexOfContact(contact1);
+        int index2 = searchIndexOfContact(contact2);
+
+        if (index1 == -1 || index2 == -1) {
+            return false;
+        }
+
+        return matrix[index1][index2] == 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Contact[] getContactPair(String contact1Name, String contact2Name) {
+        int index1 = searchIndexOfContact(contact1Name);
+        int index2 = searchIndexOfContact(contact2Name);
+
+        if (index1 == -1 || index2 == -1) {
+            return null;
+        }
+
+        return new Contact[]{contactsBook[index1], contactsBook[index2]};
     }
 
     /*========================================================================*/

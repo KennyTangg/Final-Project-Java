@@ -1,8 +1,8 @@
 package com.contactsmanager.contactsmanagerfx;
 
-import com.contactsmanager.contactsmanagerfx.dataStructures.AdjacencyMatrixGraphCB;
 import com.contactsmanager.contactsmanagerfx.model.Contact;
 import com.contactsmanager.contactsmanagerfx.dataStructures.HashMapCB;
+import com.contactsmanager.contactsmanagerfx.dataStructures.AdjacencyMatrixGraphCB;
 import com.contactsmanager.contactsmanagerfx.dataStructures.AdjacencyListGraphCB;
 import com.contactsmanager.contactsmanagerfx.utility.AdjacencyMatrixGraphUtils;
 import javafx.collections.FXCollections;
@@ -19,59 +19,43 @@ import java.util.ResourceBundle;
 
 public class AppDisplayController implements Initializable {
 
-    @FXML
-    private ComboBox<String> viewSelector;
+    /*----- GUI: View and display --------------------------*/
+    @FXML private ComboBox<String> viewSelector;
+    @FXML private TableView<?> tableDisplay; // Accepts any row type
+    @FXML private TextArea outputArea;
 
-    @FXML
-    private TableView<?> tableDisplay; // Accepts any row type
+    /*----- GUI: Search contact ----------------------------*/
+    @FXML private TextField searchNameField;
+    @FXML private Button searchButton;
 
-    @FXML
-    private TextArea outputArea;
+    /*----- GUI: Add contact -------------------------------*/
+    @FXML private TextField addNameField;
+    @FXML private TextField addIdField;
+    @FXML private Button addButton;
 
-    @FXML
-    private TextField searchNameField;
-    @FXML
-    private Button searchButton;
+    /*----- GUI: Delete contact ----------------------------*/
+    @FXML private TextField deleteNameField;
+    @FXML private Button deleteButton;
 
-    @FXML
-    private TextField addNameField;
-    @FXML
-    private TextField addIdField;
-    @FXML
-    private Button addButton;
+    /*----- GUI: Update contact ----------------------------*/
+    @FXML private TextField oldNameField;
+    @FXML private TextField newNameField;
+    @FXML private TextField newIdField;
+    @FXML private Button updateButton;
 
-    @FXML
-    private TextField deleteNameField;
-    @FXML
-    private Button deleteButton;
+    /*----- GUI: Manage connections ------------------------*/
+    @FXML private TextField connection1NameField;
+    @FXML private TextField connection2NameField;
+    @FXML private Button addConnectionButton;
+    @FXML private Button removeConnectionButton;
 
-    @FXML
-    private TextField oldNameField;
-    @FXML
-    private TextField newNameField;
-    @FXML
-    private TextField newIdField;
-    @FXML
-    private Button updateButton;
+    /*----- GUI: Suggestions and Traversal -----------------*/
+    @FXML private TextField suggestNameField;
+    @FXML private Button suggestButton;
+    @FXML private Button bfsButton;
+    @FXML private Button dfsButton;
 
-    @FXML
-    private TextField connection1NameField;
-    @FXML
-    private TextField connection2NameField;
-    @FXML
-    private Button addConnectionButton;
-    @FXML
-    private Button removeConnectionButton;
-
-    @FXML
-    private TextField suggestNameField;
-    @FXML
-    private Button suggestButton;
-    @FXML
-    private Button bfsButton;
-    @FXML
-    private Button dfsButton;
-
+    // Data Structures
     private AdjacencyMatrixGraphCB adjMatrixUndirectedGraphCB;
     private AdjacencyMatrixGraphCB adjMatrixDirectedGraphCB;
     private AdjacencyListGraphCB adjListUndirectedGraphCB;
@@ -79,7 +63,7 @@ public class AppDisplayController implements Initializable {
     private HashMapCB hashMapCB;
 
     /*========================================================================*/
-
+    /*===== Setters and Loaders Management ===================================*/
     /*
      * LOADERS
      * Pattern used:
@@ -88,8 +72,8 @@ public class AppDisplayController implements Initializable {
 
     /**
      * Sets the Adjacency List Graph and loads it into the display.
-     * @param graph The graph to load.
-     * @param directed True if directed, false if undirected.
+     * @param graph The graph to load
+     * @param directed True if directed, false if undirected
      */
     public void setAdjMatrixGraph(AdjacencyMatrixGraphCB graph, boolean directed) {
         if (directed) {
@@ -103,8 +87,8 @@ public class AppDisplayController implements Initializable {
 
     /**
      * Sets the Adjacency Matrix Graph and loads it into the display.
-     * @param graph The graph to load.
-     * @param directed True if directed, false if undirected.
+     * @param graph The graph to load
+     * @param directed True if directed, false if undirected
      */
     public void setAdjListGraph(AdjacencyListGraphCB graph, boolean directed) {
         if (directed) {
@@ -117,8 +101,8 @@ public class AppDisplayController implements Initializable {
     }
 
     /**
-     * Sets the HashMap and loads it into the display.
-     * @param hash The hashmap to load.
+     * Sets the HashMap and loads it into the display
+     * @param hash The hashmap to load
      */
     public void setHashMap(HashMapCB hash) {
         this.hashMapCB = hash;
@@ -179,11 +163,9 @@ public class AppDisplayController implements Initializable {
     }
 
     /*========================================================================*/
+    /*===== GUI Display management ===========================================*/
 
-    /*
-     * Some helper functions
-     */
-
+    // RELOAD TABLE
     /**
      * Reloads table. Table changes with each view. (Select in the combobox)
      */
@@ -217,7 +199,7 @@ public class AppDisplayController implements Initializable {
     }
 
     /**
-     * Disable controls.
+     * Used to toggle the GUI input fields and buttons based on whether a data view is selected.
      */
     private void toggleControls(boolean enabled) {
         addButton.setDisable(!enabled);
@@ -267,6 +249,12 @@ public class AppDisplayController implements Initializable {
 
         return null; // fallback
     }
+
+    /*========================================================================*/
+    /*===== Functions of App management ======================================*/
+    /*
+     * Executes add/delete/update/traverse across all (or most) underlying contact book data structures.
+     */
 
     private void addOnAllModes(String name, int id) {
         Contact newContact = new Contact(name, id);
@@ -360,6 +348,12 @@ public class AppDisplayController implements Initializable {
     }
 
     /*========================================================================*/
+    /*===== Initialization and Event Binding =================================*/
+    /**
+     * This section sets up event listeners for all UI buttons.
+     * It binds each button to the logic that interacts with the selected graph view.
+     * Also initializes the viewSelector ComboBox behavior and default states.
+     */
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -377,7 +371,7 @@ public class AppDisplayController implements Initializable {
 
 
         /*--------------------------------------------------------------------*/
-
+        // Event binding for Search Contact functionality
         searchButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name = searchNameField.getText().trim();
@@ -393,6 +387,8 @@ public class AppDisplayController implements Initializable {
             }
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for Add Contact
         addButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name = addNameField.getText().trim();
@@ -407,6 +403,8 @@ public class AppDisplayController implements Initializable {
             reloadTableByCurrentMode();
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for Delete Contact
         deleteButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name = deleteNameField.getText().trim();
@@ -414,6 +412,8 @@ public class AppDisplayController implements Initializable {
             reloadTableByCurrentMode();
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for Update Contact info
         updateButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String oldName = oldNameField.getText().trim();
@@ -429,6 +429,8 @@ public class AppDisplayController implements Initializable {
             reloadTableByCurrentMode();
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for Add Connection
         addConnectionButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name1 = connection1NameField.getText().trim();
@@ -437,6 +439,8 @@ public class AppDisplayController implements Initializable {
             reloadTableByCurrentMode();
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for Remove Connection
         removeConnectionButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name1 = connection1NameField.getText().trim();
@@ -445,6 +449,8 @@ public class AppDisplayController implements Initializable {
             reloadTableByCurrentMode();
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for Suggest Contacts (friends of friends)
         suggestButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name = suggestNameField.getText().trim();
@@ -464,6 +470,8 @@ public class AppDisplayController implements Initializable {
             reloadTableByCurrentMode();
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for DFS Traversal
         dfsButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name = suggestNameField.getText().trim();
@@ -471,15 +479,13 @@ public class AppDisplayController implements Initializable {
             reloadTableByCurrentMode();
         });
 
+        /*--------------------------------------------------------------------*/
+        // Event binding for BFS Traversal
         bfsButton.setOnAction(event -> {
             clearOutput(); // Clear so that there's no residue from prev logs.
             String name = suggestNameField.getText().trim();
             bfsTraversalbyMode(name);
             reloadTableByCurrentMode();
         });
-
-
-
-
     }
 }

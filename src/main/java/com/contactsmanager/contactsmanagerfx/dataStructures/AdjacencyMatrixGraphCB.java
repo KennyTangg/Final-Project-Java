@@ -84,13 +84,18 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     /*===== Contacts/Node Management =========================================*/
 
     // ADD NODE
+    /**
+     * {@inheritDoc}
+     *
+     * @param contact The contact object to be added
+     */
     @Override
     public void addContact(Contact contact) {
         if (size == maxSize) { // If full
             System.out.println("Matrix is full. Cannot add more nodes.");
             return;
         }
-        int free = searchIndexOfFree(); // Seek empty spaces
+        int free = searchIndexOfFree();
         if (searchIndexOfContact(contact.getName()) == -1) { // Only add if the name doesn't have the person with the same name yet.
             contactsBook[free] = contact;
             size++;
@@ -101,6 +106,13 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     }
 
     // UPDATE CONTACT
+    /**
+     * {@inheritDoc}
+     *
+     * @param contact The contact object that needs to be changed
+     * @param newName The new name to replace the old contact's name
+     * @param newStudentId New student ID as a replacement (can be the same as old one)
+     */
     @Override
     public void updateContact(Contact contact, String newName, int newStudentId) {
         String name = contact.getName();
@@ -117,6 +129,11 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     }
 
     // DELETE NODE
+    /**
+     * {@inheritDoc}
+     *
+     * @param name The name of the contact to be deleted
+     */
     @Override
     public void deleteContact(String name) {
         int target = searchIndexOfContact(name);
@@ -140,6 +157,12 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     }
 
     // SEARCH NODE
+    /**
+     * {@inheritDoc}
+     *
+     * @param name The name used to find the contact
+     * @return The matching contact object, or null if not found
+     */
     @Override
     public Contact searchContact(String name) {
         for (Contact contact : contactsBook) {
@@ -183,42 +206,65 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     /*===== Connections Management ===========================================*/
 
     // ADD CONNECTION
+    /**
+     * {@inheritDoc}
+     *
+     * @implSpec Adds a one-way or two-way connection depending on directionality.
+     * @param contact1 The name of the first contact
+     * @param contact2 The name of the second contact
+     */
     @Override
     public void addConnection(String contact1, String contact2) {
-        int yIndex = searchIndexOfContact(contact1); // Find index of both strings for the matrix
-        int xIndex = searchIndexOfContact(contact2);
+        // Find index of both strings for the matrix
+        int fromIndex = searchIndexOfContact(contact1); // y = from
+        int toIndex = searchIndexOfContact(contact2); // x = to
 
         // Check if both contacts exist
-        if (yIndex == -1 || xIndex == -1) {
+        if (fromIndex == -1 || toIndex == -1) {
             System.out.println("One or both contacts not found. Cannot add connection.");
             return;
         }
 
-        matrix[yIndex][xIndex] = 1;
+        matrix[fromIndex][toIndex] = 1;
         if (!directed) { // Undirected graph
-            matrix[xIndex][yIndex] = 1;
+            matrix[toIndex][fromIndex] = 1;
         }
     }
 
     // DELETE CONNECTION
+    /**
+     * {@inheritDoc}
+     *
+     * @implSpec Deletes a one-way or two-way connection depending on directionality.
+     * @param contact1 The name of the first contact
+     * @param contact2 The name of the second contact
+     */
     @Override
     public void removeConnection(String contact1, String contact2) {
-        int yIndex = searchIndexOfContact(contact1); // Find index of both strings for the matrix
-        int xIndex = searchIndexOfContact(contact2);
+        // Find index of both strings for the matrix
+        int fromIndex = searchIndexOfContact(contact1); // y = from
+        int toIndex = searchIndexOfContact(contact2); // x = to
 
         // Check if both contacts exist
-        if (yIndex == -1 || xIndex == -1) {
+        if (fromIndex == -1 || toIndex == -1) {
             System.out.println("One or both contacts not found. Cannot remove connection.");
             return;
         }
 
-        matrix[yIndex][xIndex] = 0;
+        matrix[fromIndex][toIndex] = 0;
         if (!directed) { // Undirected graph
-            matrix[xIndex][yIndex] = 0;
+            matrix[toIndex][fromIndex] = 0;
         }
     }
 
-    // SUGGEST CONTACTS -OK
+    // SUGGEST CONTACTS
+    /**
+     * {@inheritDoc}
+     *
+     * @implSpec Will not suggest the user itself. Will recommend the person's friends' friends.
+     * @param contact The name of the contact to get suggestions for
+     * @return List of suggested contacts
+     */
     @Override
     public List<Contact> suggestContacts(String contact) {
         LinkedList<Integer> directConnectionsIndex = new LinkedList<>();
@@ -280,6 +326,11 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     }
 
     // LIST ALL CONTACTS
+    /**
+     * {@inheritDoc}
+     *
+     * @return List of all contacts
+     */
     @Override
     public List<Contact> listAllContacts() {
         List<Contact> result = new ArrayList<>();
@@ -322,6 +373,10 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     /*===== Traversal Management =============================================*/
 
     // TRAVERSAL: BREADTH FIRST SEARCH
+    /**
+     * Breadth first search traversal that abides to one-way connections.
+     * @param contact The name of the contact to start from
+     */
     public void bfsTraversal(String startName) {
         int startIndex = searchIndexOfContact(startName);
         if (startIndex == -1) {
@@ -349,6 +404,10 @@ public class AdjacencyMatrixGraphCB extends AbstractGraphCB implements ContactsM
     }
 
     // TRAVERSAL: DEPTH FIRST SEARCH
+    /**
+     * Depth first search traversal that abides to one-way connections.
+     * @param contact The name of the contact to start from
+     */
     public void dfsTraversal(String startName) {
         int startIndex = searchIndexOfContact(startName);
         if (startIndex == -1) {

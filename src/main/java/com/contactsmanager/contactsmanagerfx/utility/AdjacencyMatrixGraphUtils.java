@@ -11,6 +11,12 @@ import javafx.scene.control.cell.TextFieldTableCell;
 
 public class AdjacencyMatrixGraphUtils {
 
+    /**
+     * Sets up columns for a TableView displaying int (as Index), Contact (as From Contact), and names of contacts of the To Contacts
+     *
+     * @param table The TableView instance to set up
+     * @param graph The Adjacency Matrix Graph Contacts Book to set up
+     */
     @SuppressWarnings("unchecked")
     public static void setup(TableView<?> table, AdjacencyMatrixGraphCB graph) { //The method uses a raw TableView<?> so that it can be filled with whatever type.
 

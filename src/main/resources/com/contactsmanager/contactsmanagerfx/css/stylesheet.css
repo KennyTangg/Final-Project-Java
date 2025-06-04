@@ -1,9 +1,107 @@
+/* Root */
 #mainPane {
     -fx-padding: 10 30 30 30;
     -fx-font-family: "Segoe UI", "San Francisco", "Ubuntu", sans-serif;
+    -fx-background-color: #EAE4D5;
 }
 
+/* Label */
 .label {
     -fx-font-weight: bold;
 }
 
+/* Text Area */
+.text-area {
+    -fx-font-family: Consolas;
+    -fx-highlight-text-fill: #000000;
+    -fx-background-color: #000000;
+}
+
+.text-area .content{
+    -fx-background-color: #B6B09F;
+}
+
+/* Button */
+.button
+{
+    -fx-background-color:
+         linear-gradient(#f0ff35,#4B352A),
+         radial-gradient(center 50% -40%, radius 200%, #EAE4D5 45%, #B6B09F 50%);
+    -fx-background-radius: 6,5;
+    -fx-background-insets: 0,1;
+
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0.0, 0, 1);
+   -fx-text-fill: #395306;
+}
+
+.button:hover
+{
+    -fx-background-color:
+        linear-gradient(#4B352A,#f0ff35),
+        radial-gradient(center 50% -40%, radius 200%, #B6B09F 45%, #EAE4D5 50%);
+    -fx-background-radius: 6,5;
+    -fx-background-insets: 0,1;
+
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0.0, 0, 1);
+    -fx-text-fill: #395306;
+
+}
+
+/* Combo Box */
+.combo-box
+{
+    -fx-background-color:
+            linear-gradient(#f0ff35,#4B352A),
+            radial-gradient(center 50% -40%, radius 200%, #EAE4D5 45%, #B6B09F 50%);
+    -fx-background-radius: 6,5;
+    -fx-background-insets: 0,1;
+
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0.0, 0, 1);
+    -fx-text-fill: #395306;
+}
+
+.combo-box:hover
+{
+    -fx-background-color:
+            linear-gradient(#4B352A,#f0ff35),
+            radial-gradient(center 50% -40%, radius 200%, #B6B09F 45%, #EAE4D5 50%);
+    -fx-background-radius: 6,5;
+    -fx-background-insets: 0,1;
+
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0.0, 0, 1);
+    -fx-text-fill: #395306;
+
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #B6B09F;
+}
+
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #B6B09F;
+    -fx-text-fill: black;
+}
+
+
+/* Table View */
+.table-view{
+   -fx-background-color: #B6B09F;
+}
+
+.table-row-cell{
+    -fx-background-color: -fx-table-cell-border-color, #D4CEBE;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em; /* 0 */
+}
+
+.table-row-cell:odd{
+    -fx-background-color: -fx-table-cell-border-color, #DBD5C6;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em; /* 0 */
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #000000;
+    -fx-background-insets: 0;
+    -fx-background-radius: 1;
+}

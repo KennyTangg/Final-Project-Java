@@ -13,6 +13,7 @@ import java.io.IOException;
 public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
+        // Load the main UI from FXML file
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("views/MainDisplay.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 700, 700);
         stage.setTitle("Contacts Manager FX");
@@ -24,7 +25,7 @@ public class App extends Application {
         // Disable all settings until user chooses a view
         controller.reloadTableByCurrentMode();
 
-        // Set up contact books for each ADT
+        // Set up contact books for each Abstract Data Type
         AdjacencyMatrixGraphCB contactsBook1 = new AdjacencyMatrixGraphCB(50, true);
         AdjacencyMatrixGraphCB contactsBook2 = new AdjacencyMatrixGraphCB(50, false);
         AdjacencyListGraphCB contactsBook3 = new AdjacencyListGraphCB(true);
@@ -37,7 +38,7 @@ public class App extends Application {
         controller.setAdjListGraph(contactsBook4, false);
         controller.setHashMap(contactsBook5);
 
-        stage.show();
+        stage.show(); // Display the GUI
     }
 
     public static void main(String[] args) {

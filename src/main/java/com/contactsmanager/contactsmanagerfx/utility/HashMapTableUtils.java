@@ -15,7 +15,7 @@ public class HashMapTableUtils {
     /**
      * Sets up columns for a TableView displaying String (as Key), Contact (as Details).
      *
-     * @param table The TableView instance to set up.
+     * @param table The TableView instance to set up
      */
     @SuppressWarnings("unchecked")
     public static void setup(TableView<?> table) { //The method uses a raw TableView<?> so that it can be filled with whatever type.
@@ -49,7 +49,7 @@ public class HashMapTableUtils {
     /**
      * Converts a Map<String, Contact> to an ObservableList for TableView.
      *
-     * @param hash The hashmap of contacts.
+     * @param hash The hashmap of contacts
      * @return ObservableList of Map.Entry<String, Contact>
      */
     public static ObservableList<Map.Entry<String, Contact>> convertToTableData(Map<String, Contact> hash) {

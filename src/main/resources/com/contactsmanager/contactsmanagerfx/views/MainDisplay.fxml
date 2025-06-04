@@ -17,7 +17,7 @@
           stylesheets="@../css/stylesheet.css"
           fx:id="mainPane">
 
-    <!-- Row 0, Col 0: ChoiceBox -->
+    <!-- Row 0, Col 0: ComboBox -->
     <ComboBox fx:id="viewSelector" prefWidth="400" GridPane.columnIndex="0" GridPane.rowIndex="0" />
 
     <!-- Row 0, Col 1: Label -->

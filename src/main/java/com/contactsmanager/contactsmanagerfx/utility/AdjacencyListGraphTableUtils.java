@@ -17,7 +17,7 @@ public class AdjacencyListGraphTableUtils {
     /**
      * Sets up columns for a TableView displaying Contact (as Contact), LinkedList<Contact> (as Known People).
      *
-     * @param table The TableView instance to set up.
+     * @param table The TableView instance to set up
      */
     @SuppressWarnings("unchecked")
     public static void setup(TableView<?> table) { //The method uses a raw TableView<?> so that it can be filled with whatever type.

@@ -90,8 +90,13 @@ src/
 │   │               ├── AppDisplayController.java
 │   │               └── Main.java
 │   └── resources/
-│       └── fxml/
-│           └── app_display.fxml
+│       └── com/
+│           └── contactsmanager/
+│               └── contactsmanagerfx/
+│                   ├── css/
+│                   │   └── stylesheet.css
+│                   └── views/
+│                       └── MainDisplay.fxml
 └── test/
     └── java/
         └── com/

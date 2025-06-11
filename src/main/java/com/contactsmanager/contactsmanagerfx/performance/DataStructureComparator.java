@@ -40,7 +40,8 @@ public class DataStructureComparator {
     /**
      * Adds a data structure to be compared, for both contact-and-connections structures. (Graphs)
      *
-     * @param dataStructure The data structure implementation
+     * @param contactMgr The data structure implementation of contacts
+     * @param connMgr The data structure implementation of connections
      * @param name The name of the data structure
      * @return This DataStructureComparator for method chaining
      */
@@ -75,11 +76,33 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public DataStructureComparator compareAddContact(Contact contact) {
-        return compareContactOperation(
-                "addContact",
-                ds -> ds.addContact(contact)
-        );
+        for (int i = 0; i < contactStructures.size(); i++) {
+            ContactsManager ds = contactStructures.get(i);
+            String name = structureNames.get(i);
+
+            PerformanceMetric metric = PerformanceMeasurement.measureAverage(
+                    () -> {
+                        for (int run = 0; run < runs; run++) {
+                            // Create a unique contact per run
+                            Contact temp = new Contact(
+                                    contact.getName() + run,
+                                    contact.getStudentId() + run
+                            );
+                            ds.addContact(temp);
+                        }
+                    },
+                    name,
+                    "addContact",
+                    1  // Just 1 external run, internal loop handles multi-run
+            );
+
+            results.get(name).computeIfAbsent("addContact", k -> new ArrayList<>()).add(metric);
+            System.out.println(metric);
+        }
+
+        return this;
     }
+
 
     /**
      * Compares the performance of searching for a contact across all data structures.
@@ -100,27 +123,74 @@ public class DataStructureComparator {
      * @param name The name of the contact to delete
      * @return This DataStructureComparator for method chaining
      */
-    public DataStructureComparator compareDeleteContact(String name) {
-        return compareContactOperation(
-                "deleteContact",
-                ds -> ds.deleteContact(name)
-        );
+    public DataStructureComparator compareDeleteContact(Contact name) {
+        for (int i = 0; i < contactStructures.size(); i++) {
+            ContactsManager ds = contactStructures.get(i);
+            String structureName = structureNames.get(i);
+
+            PerformanceMetric metric = PerformanceMeasurement.measureAverage(
+                    () -> {
+                        for (int run = 0; run < runs; run++) {
+                            String nameToDelete = name.getName() + run;
+                            ds.deleteContact(nameToDelete);
+                        }
+                    },
+                    structureName,
+                    "deleteContact",
+                    1 // One external run, internal loop handles multi-run
+            );
+
+            results.get(structureName).computeIfAbsent("deleteContact", k -> new ArrayList<>()).add(metric);
+            System.out.println(metric);
+        }
+
+        return this;
     }
 
+
     /**
-     * Compares the performance of updating a contact across all data structures.
+     * Compares the performance of updating a contact's details across all data structures.
+     * For each run, a contact with the name and student ID generated from the given base contact is updated.
+     * The updated contact will have a new name and student ID generated using the provided prefix and starting value.
      *
-     * @param contact The contact to update
-     * @param newName The new name
-     * @param newStudentId The new student ID
+     * @param contact The base contact used to generate the original entries (original name and student ID will have a run-specific suffix)
+     * @param newNamePrefix The prefix used to generate the new name for the contact during update (e.g., "updated" → "updated0", "updated1", ...)
+     * @param newStudentIdStart The starting student ID used for updates; each run increments from this value (e.g., 2000 → 2000, 2001, ...)
      * @return This DataStructureComparator for method chaining
      */
-    public DataStructureComparator compareUpdateContact(Contact contact, String newName, int newStudentId) {
-        return compareContactOperation(
-                "updateContact",
-                ds -> ds.updateContact(contact, newName, newStudentId)
-        );
+
+    public DataStructureComparator compareUpdateContact(Contact contact, String newNamePrefix, int newStudentIdStart) {
+        for (int i = 0; i < contactStructures.size(); i++) {
+            ContactsManager ds = contactStructures.get(i);
+            String structureName = structureNames.get(i);
+
+            PerformanceMetric metric = PerformanceMeasurement.measureAverage(
+                    () -> {
+                        for (int run = 0; run < runs; run++) {
+                            // Correct contact name generation (NO duplicate "0")
+                            String originalName = contact.getName() + run;
+                            int originalId = contact.getStudentId() + run;
+
+                            String newName = newNamePrefix + run;
+                            int newId = newStudentIdStart + run;
+
+                            Contact originalContact = new Contact(originalName, originalId);
+                            ds.updateContact(originalContact, newName, newId);
+                        }
+                    },
+                    structureName,
+                    "updateContact",
+                    1
+            );
+
+            results.get(structureName).computeIfAbsent("updateContact", k -> new ArrayList<>()).add(metric);
+            System.out.println(metric);
+        }
+
+        return this;
     }
+
+
 
     /**
      * Compares the performance of listing all contacts across all data structures.

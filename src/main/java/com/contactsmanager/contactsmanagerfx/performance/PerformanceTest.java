@@ -63,8 +63,7 @@ public class PerformanceTest {
         for (String operation : operations) {
             switch (operation.toLowerCase()) {
                 case "add":
-                    Contact newContact = new Contact("TestContact", 9999);
-                    allComparator.compareAddContact(newContact);
+                    allComparator.compareAddContact(new Contact("TestContact", 9999));
                     break;
                 case "search":
                     allComparator.compareSearchContact(contacts[0].getName());
@@ -77,10 +76,10 @@ public class PerformanceTest {
                     connectionComparator.compareSuggestContacts(contacts[0].getName());
                     break;
                 case "update":
-                    allComparator.compareUpdateContact(contacts[0], "UpdatedContact", 8888);
+                    allComparator.compareUpdateContact(new Contact("Contact", 1000), "UpdatedContact", 8888);
                     break;
                 case "delete":
-                    allComparator.compareDeleteContact(contacts[contactCount - 1].getName());
+                    allComparator.compareDeleteContact(new Contact("Contact", 1000));
                     break;
                 case "addconnection":
                     // Use connection comparator (only first two data structures)

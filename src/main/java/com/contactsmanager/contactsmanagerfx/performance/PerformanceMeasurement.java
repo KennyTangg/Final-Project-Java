@@ -2,114 +2,96 @@ package com.contactsmanager.contactsmanagerfx.performance;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
- * Utility class for measuring performance of operations.
+ * Utility class for measuring performance metrics.
  */
 public class PerformanceMeasurement {
+    private static final int WARMUP_ITERATIONS = 1;  // Single warmup is enough
+    private static final int MEASUREMENT_ITERATIONS = 1;  // Single measurement is enough
+    private static final long STABILIZATION_DELAY = 100; // ms to let GC settle
 
     /**
-     * Measures the performance of a given operation.
-     *
-     * @param operation The operation to measure
-     * @param dataStructureName The name of the data structure
-     * @param operationName The name of the operation
-     * @return A PerformanceMetric object containing the results
+     * Measures the execution time and memory usage of an operation.
      */
-    public static PerformanceMetric measure(Runnable operation, String dataStructureName, String operationName) {
-        // Force garbage collection before measurement to reduce noise
-        System.gc();
+    public static PerformanceMetric measure(Runnable operation, String structureName, String operationName) {
+        // Single warmup
+        operation.run();
+        
+        // Memory measurement before
+        System.gc(); // suggest GC before measuring
+        try {
+            Thread.sleep(STABILIZATION_DELAY); // let it settle
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        long before = getUsedMemory();
 
-        // Measure memory before operation
-        long memoryBefore = getUsedMemory();
-
-        // Measure time
+        // Time measurement
         long startTime = System.nanoTime();
         operation.run();
         long endTime = System.nanoTime();
 
-        // Measure memory after operation
-        long memoryAfter = getUsedMemory();
-
-        // Calculate metrics
-        long executionTime = endTime - startTime;
-        long memoryUsed = memoryAfter - memoryBefore;
-
-        // If memory used is negative (due to GC), set to 0
-        if (memoryUsed < 0) {
-            memoryUsed = 0;
+        // Memory measurement after
+        System.gc();
+        try {
+            Thread.sleep(STABILIZATION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+        long after = getUsedMemory();
 
-        return new PerformanceMetric(executionTime, memoryUsed, dataStructureName, operationName);
+        long timeTaken = endTime - startTime;
+        long memoryUsed = after - before;
+
+        // Defensive: If negative (which can happen), set to 0
+        memoryUsed = Math.max(0, memoryUsed);
+
+        return new PerformanceMetric(timeTaken, memoryUsed, structureName, operationName);
     }
 
     /**
-     * Measures the performance of a given operation that returns a result.
-     *
-     * @param <T> The type of the result
-     * @param operation The operation to measure
-     * @param dataStructureName The name of the data structure
-     * @param operationName The name of the operation
-     * @return A MeasuredResult object containing both the result and performance metrics
+     * Measures the execution time and memory usage of an operation that returns a result.
      */
-    public static <T> MeasuredResult<T> measureWithResult(Supplier<T> operation, String dataStructureName, String operationName) {
-        // Force garbage collection before measurement to reduce noise
-        System.gc();
+    public static <T> MeasuredResult<T> measureWithResult(Operation<T> operation, String structureName, String operationName) {
+        // Single warmup
+        operation.execute();
+        
+        // Memory measurement before
+        System.gc(); // suggest GC before measuring
+        try {
+            Thread.sleep(STABILIZATION_DELAY); // let it settle
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        long before = getUsedMemory();
 
-        // Measure memory before operation
-        long memoryBefore = getUsedMemory();
-
-        // Measure time and get result
+        // Time measurement
         long startTime = System.nanoTime();
-        T result = operation.get();
+        T result = operation.execute();
         long endTime = System.nanoTime();
 
-        // Measure memory after operation
-        long memoryAfter = getUsedMemory();
-
-        // Calculate metrics
-        long executionTime = endTime - startTime;
-        long memoryUsed = memoryAfter - memoryBefore;
-
-        // If memory used is negative (due to GC), set to 0
-        if (memoryUsed < 0) {
-            memoryUsed = 0;
+        // Memory measurement after
+        System.gc();
+        try {
+            Thread.sleep(STABILIZATION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+        long after = getUsedMemory();
 
-        PerformanceMetric metric = new PerformanceMetric(executionTime, memoryUsed, dataStructureName, operationName);
+        long timeTaken = endTime - startTime;
+        long memoryUsed = after - before;
+
+        // Defensive: If negative (which can happen), set to 0
+        memoryUsed = Math.max(0, memoryUsed);
+        
+        PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, structureName, operationName);
         return new MeasuredResult<>(result, metric);
     }
 
     /**
-     * Measures the average performance of a given operation over multiple runs.
-     *
-     * @param operation The operation to measure
-     * @param dataStructureName The name of the data structure
-     * @param operationName The name of the operation
-     * @param runs The number of runs to average over
-     * @return A PerformanceMetric object containing the average results
-     */
-    public static PerformanceMetric measureAverage(Runnable operation, String dataStructureName, String operationName, int runs) {
-        long totalTime = 0;
-        long totalMemory = 0;
-
-        List<PerformanceMetric> metrics = new ArrayList<>();
-
-        for (int i = 0; i < runs; i++) {
-            PerformanceMetric metric = measure(operation, dataStructureName, operationName);
-            metrics.add(metric);
-            totalTime += metric.getExecutionTimeNanos();
-            totalMemory += metric.getMemoryUsedBytes();
-        }
-
-        return new PerformanceMetric(totalTime / runs, totalMemory / runs, dataStructureName, operationName);
-    }
-
-    /**
-     * Gets the currently used memory in bytes.
-     *
-     * @return The used memory in bytes
+     * Gets the current memory usage in bytes.
      */
     private static long getUsedMemory() {
         Runtime runtime = Runtime.getRuntime();
@@ -117,9 +99,15 @@ public class PerformanceMeasurement {
     }
 
     /**
-     * Class to hold both a result and its performance metrics.
-     *
-     * @param <T> The type of the result
+     * Interface for operations that return a result.
+     */
+    @FunctionalInterface
+    public interface Operation<T> {
+        T execute();
+    }
+
+    /**
+     * Class to hold both the operation result and performance metrics.
      */
     public static class MeasuredResult<T> {
         private final T result;

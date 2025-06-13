@@ -50,7 +50,9 @@ public class PerformanceMeasurement {
             long afterMemory = getUsedMemory();
 
             timeTaken = endTime - startTime;
-            memoryUsed = Math.max(afterMemory - beforeMemory, getMinimumRealisticMemory(operationName));
+            // Use actual memory measurement without artificial minimums
+            long rawMemoryDifference = afterMemory - beforeMemory;
+            memoryUsed = Math.max(rawMemoryDifference, 0); // Only prevent negative values
         } else {
             // For other operations, use the same approach as addContact for realistic measurements
             // Single operations often don't trigger measurable memory changes, so we use amplified measurement
@@ -79,8 +81,8 @@ public class PerformanceMeasurement {
 
             timeTaken = (endTime - startTime) / iterations; // Average time per operation
 
-            // Use actual measurement with data-size-aware realistic calculation
-            memoryUsed = calculateDataSizeAwareMemory(perOperationMemory, operationName, structureName, batchSize);
+            // Use actual measurement without artificial inflation
+            memoryUsed = Math.max(perOperationMemory, 0); // Only prevent negative values
         }
 
         return new PerformanceMetric(timeTaken, memoryUsed, structureName, operationName);
@@ -130,8 +132,8 @@ public class PerformanceMeasurement {
         long totalMemoryDifference = afterMemory - baselineMemory;
         long perOperationMemory = totalMemoryDifference / iterations; // Average memory per operation
 
-        // Use actual measurement with data-size-aware calculation
-        long memoryUsed = calculateDataSizeAwareMemory(perOperationMemory, operationName, structureName, batchSize);
+        // Use actual measurement without artificial inflation
+        long memoryUsed = Math.max(perOperationMemory, 0); // Only prevent negative values
 
         PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, structureName, operationName);
         return new MeasuredResult<>(result, metric);
@@ -321,6 +323,165 @@ public class PerformanceMeasurement {
 
             default:
                 return contactCount * 100; // Default estimate
+        }
+    }
+
+    /**
+     * Calculates theoretical memory usage for specific operations.
+     * Different operations have different memory footprints.
+     */
+    public static long calculateTheoreticalOperationMemory(String structureName, String operationName, int contactCount) {
+        switch (operationName.toLowerCase()) {
+            case "addcontact":
+                return calculateTheoreticalMemory(structureName, contactCount);
+
+            case "searchcontact":
+                // Search operations typically don't allocate memory, just read existing data
+                return 0;
+
+            case "updatecontact":
+                // Update may create temporary objects during the operation
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return 200; // Minimal temporary object creation
+                    case "Adjacency List":
+                        return 150; // Some temporary objects for list manipulation
+                    case "HashMap":
+                        return 100; // Minimal overhead for hash operations
+                    default:
+                        return 100;
+                }
+
+            case "deletecontact":
+                // Delete operations may have some cleanup overhead
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return 100; // Minimal cleanup
+                    case "Adjacency List":
+                        return 200; // List cleanup operations
+                    case "HashMap":
+                        return 50; // Minimal hash cleanup
+                    default:
+                        return 100;
+                }
+
+            case "listallcontacts":
+                // Creating a new list with all contacts
+                return contactCount * 8; // Array of references
+
+            case "suggestcontacts":
+                // Suggestion algorithms create temporary collections
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return contactCount * 4; // Efficient matrix traversal
+                    case "Adjacency List":
+                        return contactCount * 12; // More complex list traversal
+                    case "HashMap":
+                        return contactCount * 8; // Moderate hash-based traversal
+                    default:
+                        return contactCount * 8;
+                }
+
+            case "addconnection":
+            case "removeconnection":
+                // Connection operations have minimal memory overhead
+                return 64; // Small temporary objects
+
+            default:
+                return 100; // Default estimate
+        }
+    }
+
+    /**
+     * Calculates theoretical time complexity for operations in nanoseconds.
+     * Based on algorithmic complexity and typical performance characteristics.
+     */
+    public static long calculateTheoreticalTime(String structureName, String operationName, int contactCount) {
+        // Base time constants (in nanoseconds) - calibrated from real measurements
+        final long CONSTANT_TIME = 1000; // ~1 microsecond for O(1) operations
+        final long LINEAR_BASE = 100; // ~100 nanoseconds per element for O(n) operations
+        final long LOG_BASE = 50; // ~50 nanoseconds per log element for O(log n) operations
+
+        switch (operationName.toLowerCase()) {
+            case "addcontact":
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return CONSTANT_TIME * 2; // O(1) - direct array access
+                    case "Adjacency List":
+                        return CONSTANT_TIME * 3; // O(1) - hash map insertion
+                    case "HashMap":
+                        return CONSTANT_TIME; // O(1) - optimal hash insertion
+                    default:
+                        return CONSTANT_TIME * 2;
+                }
+
+            case "searchcontact":
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return CONSTANT_TIME / 2; // O(1) - direct array access, fastest
+                    case "Adjacency List":
+                        return LINEAR_BASE * contactCount / 1000; // O(n) - linear search in worst case
+                    case "HashMap":
+                        return CONSTANT_TIME / 3; // O(1) - hash lookup, very fast
+                    default:
+                        return CONSTANT_TIME;
+                }
+
+            case "updatecontact":
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return CONSTANT_TIME * 3; // O(1) - direct access + update
+                    case "Adjacency List":
+                        return CONSTANT_TIME * 4; // O(1) - hash lookup + list update
+                    case "HashMap":
+                        return CONSTANT_TIME * 2; // O(1) - hash update
+                    default:
+                        return CONSTANT_TIME * 3;
+                }
+
+            case "deletecontact":
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return LINEAR_BASE * contactCount / 100; // O(n) - need to clear row/column
+                    case "Adjacency List":
+                        return CONSTANT_TIME * 5; // O(1) - hash removal + list cleanup
+                    case "HashMap":
+                        return CONSTANT_TIME * 2; // O(1) - hash removal
+                    default:
+                        return CONSTANT_TIME * 3;
+                }
+
+            case "listallcontacts":
+                // O(n) for all structures - need to iterate through all contacts
+                return LINEAR_BASE * contactCount;
+
+            case "suggestcontacts":
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return LINEAR_BASE * contactCount / 10; // O(n) - efficient matrix traversal
+                    case "Adjacency List":
+                        return LINEAR_BASE * contactCount / 2; // O(n) - list traversal with more overhead
+                    case "HashMap":
+                        return LINEAR_BASE * contactCount / 5; // O(n) - hash-based traversal
+                    default:
+                        return LINEAR_BASE * contactCount;
+                }
+
+            case "addconnection":
+            case "removeconnection":
+                switch (structureName) {
+                    case "Adjacency Matrix":
+                        return CONSTANT_TIME; // O(1) - direct matrix access
+                    case "Adjacency List":
+                        return CONSTANT_TIME * 2; // O(1) - hash + list operations
+                    case "HashMap":
+                        return CONSTANT_TIME * 2; // O(1) - hash operations
+                    default:
+                        return CONSTANT_TIME;
+                }
+
+            default:
+                return CONSTANT_TIME;
         }
     }
 

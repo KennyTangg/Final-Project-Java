@@ -220,21 +220,41 @@ public class DataStructureComparator {
 
             System.out.printf("Generating connections for %s with %d contacts...\n", name, allContacts.size());
 
-            // Calculate number of connections to create
+            // Calculate number of connections to create with reasonable limits
             int maxPossibleConnections = (allContacts.size() * (allContacts.size() - 1)) / 2; // n*(n-1)/2 for undirected graph
-            int targetConnections = (int) (maxPossibleConnections * connectionDensity);
 
-            // Ensure each contact has at least 1-2 connections for meaningful suggestions
-            int minConnectionsPerContact = Math.min(2, allContacts.size() - 1);
+            // For large datasets, use a more reasonable approach
+            int targetConnections;
+            if (allContacts.size() <= 1000) {
+                // For small datasets, use percentage-based approach
+                targetConnections = (int) (maxPossibleConnections * connectionDensity);
+            } else {
+                // For large datasets, use connections-per-contact approach to avoid exponential growth
+                int connectionsPerContact = Math.max(3, (int)(allContacts.size() * 0.01)); // 1% of contacts, minimum 3
+                connectionsPerContact = Math.min(connectionsPerContact, 50); // Cap at 50 connections per contact
+                targetConnections = (allContacts.size() * connectionsPerContact) / 2;
+            }
+
+            // Ensure each contact has at least 2-3 connections for meaningful suggestions
+            int minConnectionsPerContact = Math.min(3, allContacts.size() - 1);
             int minTotalConnections = (allContacts.size() * minConnectionsPerContact) / 2;
             targetConnections = Math.max(targetConnections, minTotalConnections);
 
-            System.out.printf("Target connections: %d (%.1f%% density)\n", targetConnections, connectionDensity * 100);
+            // Cap the maximum to prevent excessive generation time
+            int maxReasonableConnections = Math.min(maxPossibleConnections, allContacts.size() * 20);
+            targetConnections = Math.min(targetConnections, maxReasonableConnections);
+
+            double actualDensity = (double) targetConnections / maxPossibleConnections * 100;
+            System.out.printf("Target connections: %d (%.3f%% density)\n", targetConnections, actualDensity);
 
             // Create connections using a random but balanced approach
             java.util.Random random = new java.util.Random(42); // Fixed seed for reproducible results
             java.util.Set<String> createdConnections = new java.util.HashSet<>();
             int connectionsCreated = 0;
+
+            // Progress tracking
+            int progressInterval = Math.max(1, targetConnections / 20); // Show progress every 5%
+            int nextProgressUpdate = progressInterval;
 
             // First pass: Ensure each contact has at least one connection
             for (int j = 0; j < allContacts.size() && connectionsCreated < targetConnections; j++) {
@@ -253,6 +273,14 @@ public class DataStructureComparator {
                             cm.addConnection(contact1.getName(), contact2.getName()));
                         createdConnections.add(connectionKey);
                         connectionsCreated++;
+
+                        // Show progress
+                        if (connectionsCreated >= nextProgressUpdate) {
+                            double progress = (double) connectionsCreated / targetConnections * 100;
+                            System.out.printf("  Progress: %d/%d connections (%.1f%%)%n",
+                                connectionsCreated, targetConnections, progress);
+                            nextProgressUpdate += progressInterval;
+                        }
                         break;
                     }
                 }
@@ -274,6 +302,14 @@ public class DataStructureComparator {
                         cm.addConnection(contact1.getName(), contact2.getName()));
                     createdConnections.add(connectionKey);
                     connectionsCreated++;
+
+                    // Show progress
+                    if (connectionsCreated >= nextProgressUpdate) {
+                        double progress = (double) connectionsCreated / targetConnections * 100;
+                        System.out.printf("  Progress: %d/%d connections (%.1f%%)%n",
+                            connectionsCreated, targetConnections, progress);
+                        nextProgressUpdate += progressInterval;
+                    }
                 }
 
                 // Prevent infinite loop if we can't create more unique connections
@@ -355,19 +391,10 @@ public class DataStructureComparator {
                 // Calculate per-operation metrics
                 long timeTaken = (endTime - startTime) / amplificationFactor;
 
-                // Use the EXACT SAME approach as addContact: direct measurement with fallback
-                long memoryUsed;
-                if (rawDifference < 0) {
-                    // If negative, estimate based on theoretical memory usage (same as addContact)
-                    long theoretical = PerformanceMeasurement.calculateTheoreticalMemory(structureName, currentBatchSize);
-                    memoryUsed = Math.max(theoretical / 1000, 0);
-                    System.out.printf("[DEBUG] %s - deleteContact: negative diff detected, using theoretical: %d bytes%n",
-                        structureName, memoryUsed);
-                } else {
-                    memoryUsed = rawDifference / amplificationFactor;
-                    System.out.printf("[DEBUG] %s - deleteContact: measured diff: %d bytes, per-operation: %d bytes%n",
-                        structureName, rawDifference, memoryUsed);
-                }
+                // Use actual measurement only - no artificial fallbacks
+                long memoryUsed = Math.max(rawDifference / amplificationFactor, 0);
+                System.out.printf("[DEBUG] %s - deleteContact: measured diff: %d bytes, per-operation: %d bytes%n",
+                    structureName, rawDifference, memoryUsed);
 
                 System.out.printf("[DEBUG] %s - deleteContact: final memoryUsed: %d bytes (%.2f KB)%n",
                     structureName, memoryUsed, memoryUsed / 1024.0);
@@ -380,7 +407,12 @@ public class DataStructureComparator {
 
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, structureName, "deleteContact");
             results.get(structureName).computeIfAbsent("deleteContact", k -> new ArrayList<>()).add(finalMetric);
-            System.out.println(finalMetric);
+
+            // Show theoretical comparison
+            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(structureName, "deleteContact", currentBatchSize);
+            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(structureName, "deleteContact", currentBatchSize);
+            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
+                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
         }
         return this;
     }
@@ -436,19 +468,10 @@ public class DataStructureComparator {
                 // Calculate per-operation metrics
                 long timeTaken = (endTime - startTime) / amplificationFactor;
 
-                // Use the EXACT SAME approach as addContact: direct measurement with fallback
-                long memoryUsed;
-                if (rawDifference < 0) {
-                    // If negative, estimate based on theoretical memory usage (same as addContact)
-                    long theoretical = PerformanceMeasurement.calculateTheoreticalMemory(structureName, currentBatchSize);
-                    memoryUsed = Math.max(theoretical / 1000, 0);
-                    System.out.printf("[DEBUG] %s - updateContact: negative diff detected, using theoretical: %d bytes%n",
-                        structureName, memoryUsed);
-                } else {
-                    memoryUsed = rawDifference / amplificationFactor;
-                    System.out.printf("[DEBUG] %s - updateContact: measured diff: %d bytes, per-operation: %d bytes%n",
-                        structureName, rawDifference, memoryUsed);
-                }
+                // Use actual measurement only - no artificial fallbacks
+                long memoryUsed = Math.max(rawDifference / amplificationFactor, 0);
+                System.out.printf("[DEBUG] %s - updateContact: measured diff: %d bytes, per-operation: %d bytes%n",
+                    structureName, rawDifference, memoryUsed);
 
                 System.out.printf("[DEBUG] %s - updateContact: final memoryUsed: %d bytes (%.2f KB)%n",
                     structureName, memoryUsed, memoryUsed / 1024.0);
@@ -461,7 +484,12 @@ public class DataStructureComparator {
 
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, structureName, "updateContact");
             results.get(structureName).computeIfAbsent("updateContact", k -> new ArrayList<>()).add(finalMetric);
-            System.out.println(finalMetric);
+
+            // Show theoretical comparison
+            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(structureName, "updateContact", currentBatchSize);
+            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(structureName, "updateContact", currentBatchSize);
+            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
+                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
         }
         return this;
     }
@@ -546,7 +574,12 @@ public class DataStructureComparator {
 
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
-            System.out.println(finalMetric);
+
+            // Show theoretical comparison
+            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
+            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
+            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
+                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
         }
         return this;
     }
@@ -569,58 +602,61 @@ public class DataStructureComparator {
                 // Show progress
                 System.out.printf("  [%s] Run %d/%d... ", name, run + 1, runs);
 
-                // For operations that return results, measure the memory impact of result collection
+                // For search operations, don't collect results to avoid artificial memory allocation
                 System.gc();
                 try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
                 long beforeMemory = getUsedMemory();
 
-                // Collect multiple results to amplify memory signal like addContact
-                int amplificationFactor = Math.max(500, currentBatchSize / 2); // Much higher amplification to match addContact behavior
-                List<T> results = new ArrayList<>();
-
                 long startTime = System.nanoTime();
-                for (int amp = 0; amp < amplificationFactor; amp++) {
+                // For search operations, just perform the operation without collecting results
+                if (operationName.equals("searchContact")) {
+                    // Single operation without result collection for accurate memory measurement
                     T result = operation.apply(ds);
-                    results.add(result); // Keep results to measure their memory impact
+                    // Don't store the result to avoid artificial memory allocation
+                } else {
+                    // For other operations that legitimately need result collection
+                    int amplificationFactor = Math.max(500, currentBatchSize / 2);
+                    List<T> results = new ArrayList<>();
+                    for (int amp = 0; amp < amplificationFactor; amp++) {
+                        T result = operation.apply(ds);
+                        results.add(result);
+                    }
+                    results.clear(); // Clear immediately after measurement
                 }
                 long endTime = System.nanoTime();
 
-                // Measure memory after collecting results
+                // Measure memory after operation
                 long afterMemory = getUsedMemory();
                 long rawDifference = afterMemory - beforeMemory;
                 System.out.printf("[DEBUG] %s - %s: beforeMemory: %d bytes, afterMemory: %d bytes, diff: %d bytes%n",
                     name, operationName, beforeMemory, afterMemory, rawDifference);
 
                 // Calculate per-operation metrics
-                long timeTaken = (endTime - startTime) / amplificationFactor;
-
-                // Use the EXACT SAME approach as addContact: direct measurement with fallback
-                long memoryUsed;
-                if (rawDifference < 0) {
-                    // If negative, estimate based on theoretical memory usage (same as addContact)
-                    long theoretical = PerformanceMeasurement.calculateTheoreticalMemory(name, currentBatchSize);
-                    memoryUsed = Math.max(theoretical / 1000, 0);
-                    System.out.printf("[DEBUG] %s - %s: negative diff detected, using theoretical: %d bytes%n",
-                        name, operationName, memoryUsed);
-                } else {
-                    memoryUsed = rawDifference / amplificationFactor;
-                    System.out.printf("[DEBUG] %s - %s: measured diff: %d bytes, per-operation: %d bytes%n",
-                        name, operationName, rawDifference, memoryUsed);
+                long timeTaken = endTime - startTime;
+                if (!operationName.equals("searchContact")) {
+                    // For operations with amplification, divide by amplification factor
+                    int amplificationFactor = Math.max(500, currentBatchSize / 2);
+                    timeTaken = timeTaken / amplificationFactor;
+                    rawDifference = rawDifference / amplificationFactor;
                 }
 
-                System.out.printf("[DEBUG] %s - %s: final memoryUsed: %d bytes (%.2f KB)%n",
-                    name, operationName, memoryUsed, memoryUsed / 1024.0);
+                // Use actual measurement without artificial inflation
+                long memoryUsed = Math.max(rawDifference, 0); // Only prevent negative values
+                System.out.printf("[DEBUG] %s - %s: final memoryUsed: %d bytes%n",
+                    name, operationName, memoryUsed);
 
                 PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, name, operationName);
                 runMetrics.add(metric);
-
-                // Clear results to avoid memory leak
-                results.clear();
             }
 
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
-            System.out.println(finalMetric);
+
+            // Show theoretical comparison
+            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
+            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
+            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
+                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
         }
         return this;
     }
@@ -664,11 +700,11 @@ public class DataStructureComparator {
                 // Handle negative memory differences (caused by GC during measurement)
                 long memoryUsed;
                 if (rawDifference < 0) {
-                    // If negative, estimate based on theoretical memory usage
-                    long theoretical = PerformanceMeasurement.calculateTheoreticalMemory(name, currentBatchSize);
-                    memoryUsed = Math.max(theoretical / 100, 1024); // Scale down for individual operations
+                    // If negative, use 0 - don't artificially inflate
+                    memoryUsed = 0;
                 } else {
-                    memoryUsed = Math.max(rawDifference, 1024);
+                    // Use actual measurement without artificial minimums
+                    memoryUsed = rawDifference;
                 }
 
                 PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, name, operationName);
@@ -677,7 +713,12 @@ public class DataStructureComparator {
 
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
-            System.out.println(finalMetric);
+
+            // Show theoretical comparison
+            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
+            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
+            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
+                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
         }
         return this;
     }
@@ -722,11 +763,11 @@ public class DataStructureComparator {
                 // Handle negative memory differences (caused by GC during measurement)
                 long memoryUsed;
                 if (rawDifference < 0) {
-                    // If negative, estimate based on theoretical memory usage
-                    long theoretical = PerformanceMeasurement.calculateTheoreticalMemory(name, currentBatchSize);
-                    memoryUsed = Math.max(theoretical / 100, 1024); // Scale down for individual operations
+                    // If negative, use 0 - don't artificially inflate
+                    memoryUsed = 0;
                 } else {
-                    memoryUsed = Math.max(rawDifference, 1024);
+                    // Use actual measurement without artificial minimums
+                    memoryUsed = rawDifference;
                 }
 
                 PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, name, operationName);
@@ -735,7 +776,12 @@ public class DataStructureComparator {
 
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
-            System.out.println(finalMetric);
+
+            // Show theoretical comparison
+            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
+            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
+            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
+                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
         }
         return this;
     }
@@ -821,30 +867,16 @@ public class DataStructureComparator {
                 double avgTotalTime = totalTime / (double)metrics.size();
                 double avgTotalMemory = totalMemory / (double)metrics.size();
 
-                // Get theoretical memory for comparison
-                long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalMemory(structureName, currentBatchSize);
-                double memoryRatio = avgTotalMemory / theoreticalMemory;
+                // Get theoretical memory and time for comparison
+                long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(structureName, operation, currentBatchSize);
+                long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(structureName, operation, currentBatchSize);
 
-                System.out.printf("%s - %s: Total Time: %s, Total Memory: %d bytes",
+                System.out.printf("%s - %s: Total Time: %s, Total Memory: %d bytes (Theoretical: Time: %s, Memory: %d bytes)%n",
                     structureName, operation,
                     formatTime(avgTotalTime / 1_000_000.0),
-                    (long)avgTotalMemory);
-
-                // Add theoretical comparison for addContact operations
-                if (operation.equals("addContact")) {
-                    System.out.printf(" (Theoretical: %d bytes, Ratio: %.2fx)",
-                        theoreticalMemory, memoryRatio);
-
-                    if (memoryRatio > 2.0) {
-                        System.out.print(" ⚠️ HIGH");
-                    } else if (memoryRatio < 0.5) {
-                        System.out.print(" ⚠️ LOW");
-                    } else {
-                        System.out.print(" ✅ OK");
-                    }
-                }
-
-                System.out.println();
+                    (long)avgTotalMemory,
+                    formatTime(theoreticalTime / 1_000_000.0),
+                    theoreticalMemory);
             }
         }
         System.out.println("========================================");

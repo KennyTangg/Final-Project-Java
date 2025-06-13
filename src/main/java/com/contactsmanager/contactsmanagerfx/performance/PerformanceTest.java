@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A class for running performance tests on different data structure implementations.
  */
 public class PerformanceTest {
-    private static final int DEFAULT_RUNS = 1;
+    private static final int DEFAULT_RUNS = 10; // Run each test 10 times for better averaging
     private static final AtomicInteger contactCounter = new AtomicInteger(0);
 
     /**
@@ -31,20 +31,32 @@ public class PerformanceTest {
         DataStructureComparator comparator = new DataStructureComparator(DEFAULT_RUNS)
                 .addDataStructure(graph, graph, "Adjacency List")
                 .addDataStructure(matrixGraph, matrixGraph, "Adjacency Matrix")
-                .addDataStructure(hash, "HashMap");
-    
+                .addDataStructure(hash, hash, "HashMap"); // HashMap now implements both interfaces
+
         // Always generate contacts
         Contact[] contacts = new Contact[contactCount];
         for (int i = 0; i < contactCount; i++) {
             contacts[i] = generateUniqueContact();
         }
-    
+
         // Only populate the data structures if the operation needs existing data
         if (needsInitialContacts(operations)) {
-            for (Contact contact : contacts) {
-                graph.addContact(contact);
-                matrixGraph.addContact(contact);
-                hash.addContact(contact);
+            // Suppress console output during setup to avoid measurement interference
+            PerformanceMeasurement.suppressConsoleOutput(() -> {
+                for (Contact contact : contacts) {
+                    graph.addContact(contact);
+                    matrixGraph.addContact(contact);
+                    hash.addContact(contact);
+                }
+            });
+            // Set the batch size to reflect the number of contacts actually added
+            comparator.setBatchSize(contactCount);
+
+            // Generate realistic connections if suggest or connection operations are requested
+            if (needsConnections(operations)) {
+                System.out.println("Generating realistic connection data for meaningful suggestions...");
+                // Use 15% connection density for realistic social network simulation
+                comparator.generateConnections(0.15);
             }
         }
     
@@ -113,6 +125,21 @@ public class PerformanceTest {
                 case "addconnection":
                 case "removeconnection":
                 case "suggest":
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if any of the operations require connections to be present for meaningful testing.
+     */
+    private static boolean needsConnections(String[] operations) {
+        for (String op : operations) {
+            switch (op.toLowerCase()) {
+                case "suggest":
+                case "addconnection":
+                case "removeconnection":
                     return true;
             }
         }

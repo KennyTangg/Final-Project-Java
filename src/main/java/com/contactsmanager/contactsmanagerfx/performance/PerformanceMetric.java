@@ -89,9 +89,45 @@ public class PerformanceMetric {
 
     @Override
     public String toString() {
-        return String.format("Time: %.3f ms, Memory: %.2f KB",
-            timeNanos / 1_000_000.0,
-            memoryBytes / 1024.0);
+        return String.format("Time: %s, Memory: %s",
+            formatTime(timeNanos / 1_000_000.0),
+            formatMemory(memoryBytes / 1024.0));
+    }
+
+    /**
+     * Formats time values to show appropriate precision based on magnitude.
+     * Ensures no value shows as 0.00 ms when it's actually non-zero.
+     */
+    private String formatTime(double timeMs) {
+        if (timeMs >= 1.0) {
+            return String.format("%.2f ms", timeMs);
+        } else if (timeMs >= 0.1) {
+            return String.format("%.3f ms", timeMs);
+        } else if (timeMs >= 0.01) {
+            return String.format("%.4f ms", timeMs);
+        } else if (timeMs >= 0.001) {
+            return String.format("%.5f ms", timeMs);
+        } else {
+            return String.format("%.6f ms", timeMs);
+        }
+    }
+
+    /**
+     * Formats memory values to show appropriate precision based on magnitude.
+     * Ensures no value shows as 0.00 KB when it's actually non-zero.
+     */
+    private String formatMemory(double memoryKB) {
+        if (memoryKB >= 1.0) {
+            return String.format("%.2f KB", memoryKB);
+        } else if (memoryKB >= 0.1) {
+            return String.format("%.3f KB", memoryKB);
+        } else if (memoryKB >= 0.01) {
+            return String.format("%.4f KB", memoryKB);
+        } else if (memoryKB >= 0.001) {
+            return String.format("%.5f KB", memoryKB);
+        } else {
+            return String.format("%.6f KB", memoryKB);
+        }
     }
 
     private static long getUsedMemory() {

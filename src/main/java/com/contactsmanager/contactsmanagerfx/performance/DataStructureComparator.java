@@ -147,19 +147,9 @@ public class DataStructureComparator {
 
                 long timeTaken = endTime - startTime;
 
-                // Handle negative memory differences (caused by GC during measurement)
-                long memoryUsed;
-                if (rawDifference < 0) {
-                    // If negative, estimate based on theoretical memory usage
-                    long theoretical = PerformanceMeasurement.calculateTheoreticalMemory(name, currentBatchSize);
-                    memoryUsed = Math.max(theoretical, 0);
-                    System.out.printf("[DEBUG] %s - addContact: negative diff (%d bytes), using theoretical: %d bytes%n",
-                        name, rawDifference, memoryUsed);
-                } else {
-                    memoryUsed = rawDifference;
-                    System.out.printf("[DEBUG] %s - addContact: positive diff: %d bytes%n",
-                        name, rawDifference);
-                }
+                // Use actual measurement only - no theoretical fallbacks
+                long memoryUsed = Math.max(rawDifference, 0);
+                System.out.printf("[DEBUG] %s - addContact: measured diff: %d bytes%n", name, memoryUsed);
 
                 PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, name, "addContact");
 
@@ -177,9 +167,7 @@ public class DataStructureComparator {
                     metric.getMemoryBytes()
                 );
 
-                // Print theoretical memory for comparison
-                long theoretical = PerformanceMeasurement.calculateTheoreticalMemory(name, currentBatchSize);
-                System.out.printf("  Theoretical Memory: %s%n", formatMemory(theoretical / 1024.0));
+
             }
 
             if (!runMetrics.isEmpty()) {
@@ -408,11 +396,8 @@ public class DataStructureComparator {
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, structureName, "deleteContact");
             results.get(structureName).computeIfAbsent("deleteContact", k -> new ArrayList<>()).add(finalMetric);
 
-            // Show theoretical comparison
-            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(structureName, "deleteContact", currentBatchSize);
-            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(structureName, "deleteContact", currentBatchSize);
-            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
-                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
+            // Show only actual measurements
+            System.out.printf("%s%n", finalMetric);
         }
         return this;
     }
@@ -485,11 +470,8 @@ public class DataStructureComparator {
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, structureName, "updateContact");
             results.get(structureName).computeIfAbsent("updateContact", k -> new ArrayList<>()).add(finalMetric);
 
-            // Show theoretical comparison
-            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(structureName, "updateContact", currentBatchSize);
-            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(structureName, "updateContact", currentBatchSize);
-            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
-                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
+            // Show only actual measurements
+            System.out.printf("%s%n", finalMetric);
         }
         return this;
     }
@@ -575,11 +557,8 @@ public class DataStructureComparator {
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
 
-            // Show theoretical comparison
-            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
-            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
-            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
-                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
+            // Show only actual measurements
+            System.out.printf("%s%n", finalMetric);
         }
         return this;
     }
@@ -652,11 +631,8 @@ public class DataStructureComparator {
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
 
-            // Show theoretical comparison
-            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
-            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
-            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
-                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
+            // Show only actual measurements
+            System.out.printf("%s%n", finalMetric);
         }
         return this;
     }
@@ -714,11 +690,8 @@ public class DataStructureComparator {
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
 
-            // Show theoretical comparison
-            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
-            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
-            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
-                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
+            // Show only actual measurements
+            System.out.printf("%s%n", finalMetric);
         }
         return this;
     }
@@ -777,11 +750,8 @@ public class DataStructureComparator {
             PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
             results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
 
-            // Show theoretical comparison
-            long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(name, operationName, currentBatchSize);
-            long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(name, operationName, currentBatchSize);
-            System.out.printf("%s | Theoretical: Time: %s, Memory: %d bytes%n",
-                finalMetric, formatTime(theoreticalTime / 1_000_000.0), theoreticalMemory);
+            // Show only actual measurements
+            System.out.printf("%s%n", finalMetric);
         }
         return this;
     }
@@ -867,16 +837,11 @@ public class DataStructureComparator {
                 double avgTotalTime = totalTime / (double)metrics.size();
                 double avgTotalMemory = totalMemory / (double)metrics.size();
 
-                // Get theoretical memory and time for comparison
-                long theoreticalMemory = PerformanceMeasurement.calculateTheoreticalOperationMemory(structureName, operation, currentBatchSize);
-                long theoreticalTime = PerformanceMeasurement.calculateTheoreticalTime(structureName, operation, currentBatchSize);
-
-                System.out.printf("%s - %s: Total Time: %s, Total Memory: %d bytes (Theoretical: Time: %s, Memory: %d bytes)%n",
+                // Show only actual measurements
+                System.out.printf("%s - %s: Total Time: %s, Total Memory: %d bytes%n",
                     structureName, operation,
                     formatTime(avgTotalTime / 1_000_000.0),
-                    (long)avgTotalMemory,
-                    formatTime(theoreticalTime / 1_000_000.0),
-                    theoreticalMemory);
+                    (long)avgTotalMemory);
             }
         }
         System.out.println("========================================");

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.Comparator;
 
 /**
@@ -26,6 +27,7 @@ public class DataStructureComparator {
     private final Map<String, Map<String, List<PerformanceMetric>>> results;
     private final int runs;
     private static final double OUTLIER_THRESHOLD = 1.5; // IQR multiplier for outlier detection
+    private static final int DEFAULT_RUNS = 10; // Default number of test runs
 
     private int currentBatchSize = 0; // Add this field to track the actual batch size
     private static final int MAX_MATRIX_SIZE = 10000; // Maximum size for adjacency matrix
@@ -113,9 +115,31 @@ public class DataStructureComparator {
                 // Show progress
                 System.out.printf("  [%s] Run %d/%d... ", name, run + 1, runs);
 
+                // Extended warmup for larger datasets to ensure JVM optimization
+                int warmupRuns = Math.max(3, currentBatchSize / 2000);
+                for (int w = 0; w < warmupRuns; w++) {
+                    final int warmupIndex = w; // Make effectively final for lambda
+                    ContactsManager warmupDs;
+                    if (contactStructures.get(i) instanceof com.contactsmanager.contactsmanagerfx.dataStructures.AdjacencyListGraphCB) {
+                        warmupDs = new com.contactsmanager.contactsmanagerfx.dataStructures.AdjacencyListGraphCB();
+                    } else if (contactStructures.get(i) instanceof com.contactsmanager.contactsmanagerfx.dataStructures.AdjacencyMatrixGraphCB) {
+                        warmupDs = new com.contactsmanager.contactsmanagerfx.dataStructures.AdjacencyMatrixGraphCB(matrixSize);
+                    } else {
+                        warmupDs = new com.contactsmanager.contactsmanagerfx.dataStructures.HashMapCB();
+                    }
+
+                    PerformanceMeasurement.suppressConsoleOutput(() -> {
+                        int warmupSize = Math.min(200, currentBatchSize / 10);
+                        for (int j = 0; j < warmupSize; j++) {
+                            Contact temp = new Contact("Warmup" + warmupIndex + "_" + j, 999000 + warmupIndex * 1000 + j);
+                            warmupDs.addContact(temp);
+                        }
+                    });
+                }
+
                 // Stabilize memory and get baseline
                 System.gc();
-                try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                try { Thread.sleep(150); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
                 long baselineMemory = getUsedMemory();
 
                 // Create data structure and measure its memory footprint
@@ -424,18 +448,16 @@ public class DataStructureComparator {
                 // Show progress
                 System.out.printf("  [%s] Run %d/%d... ", structureName, run + 1, runs);
 
-                // For individual operations, use amplified measurement to get detectable signal
-                System.gc();
-                try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                long beforeMemory = getUsedMemory();
+                // Use stable memory measurement approach
+                long beforeMemory = getStableMemoryMeasurement();
 
                 String originalName = contact.getName() + run;
                 int originalId = contact.getStudentId() + run;
                 String newName = newNamePrefix + run;
                 int newId = newStudentIdStart + run;
 
-                // Amplify the operation significantly to get measurable memory usage like addContact
-                int amplificationFactor = Math.max(1000, currentBatchSize); // Much higher amplification to match addContact behavior
+                // Use consistent amplification factor that scales with data size to ensure realistic measurements
+                int amplificationFactor = Math.max(100, Math.min(2000, currentBatchSize / 2));
                 long startTime = System.nanoTime();
                 for (int amp = 0; amp < amplificationFactor; amp++) {
                     final int ampFinal = amp; // Make effectively final for lambda
@@ -444,8 +466,8 @@ public class DataStructureComparator {
                 }
                 long endTime = System.nanoTime();
 
-                // Measure memory after amplified operations
-                long afterMemory = getUsedMemory();
+                // Use stable memory measurement after operations
+                long afterMemory = getStableMemoryMeasurement();
                 long rawDifference = afterMemory - beforeMemory;
                 System.out.printf("[DEBUG] %s - updateContact: beforeMemory: %d bytes, afterMemory: %d bytes, diff: %d bytes%n",
                     structureName, beforeMemory, afterMemory, rawDifference);
@@ -453,7 +475,7 @@ public class DataStructureComparator {
                 // Calculate per-operation metrics
                 long timeTaken = (endTime - startTime) / amplificationFactor;
 
-                // Use actual measurement only - no artificial fallbacks
+                // Use actual measurement only - no artificial calculations
                 long memoryUsed = Math.max(rawDifference / amplificationFactor, 0);
                 System.out.printf("[DEBUG] %s - updateContact: measured diff: %d bytes, per-operation: %d bytes%n",
                     structureName, rawDifference, memoryUsed);
@@ -564,7 +586,8 @@ public class DataStructureComparator {
     }
 
     /**
-     * Compares the performance of a contact-bound that returns a result across all data structures.
+     * Compares the performance of a contact operation that returns a result across all data structures.
+     * Uses device-agnostic measurement approach for consistent results across different environments.
      *
      * @param <T> The type of the result
      * @param operationName The name of the operation
@@ -572,6 +595,8 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public <T> DataStructureComparator compareContactOperationWithResult(String operationName, Function<ContactsManager, T> operation) {
+
+
         for (int i = 0; i < contactStructures.size(); i++) {
             ContactsManager ds = contactStructures.get(i);
             String name = structureNames.get(i);
@@ -581,50 +606,7 @@ public class DataStructureComparator {
                 // Show progress
                 System.out.printf("  [%s] Run %d/%d... ", name, run + 1, runs);
 
-                // For search operations, don't collect results to avoid artificial memory allocation
-                System.gc();
-                try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                long beforeMemory = getUsedMemory();
-
-                long startTime = System.nanoTime();
-                // For search operations, just perform the operation without collecting results
-                if (operationName.equals("searchContact")) {
-                    // Single operation without result collection for accurate memory measurement
-                    T result = operation.apply(ds);
-                    // Don't store the result to avoid artificial memory allocation
-                } else {
-                    // For other operations that legitimately need result collection
-                    int amplificationFactor = Math.max(500, currentBatchSize / 2);
-                    List<T> results = new ArrayList<>();
-                    for (int amp = 0; amp < amplificationFactor; amp++) {
-                        T result = operation.apply(ds);
-                        results.add(result);
-                    }
-                    results.clear(); // Clear immediately after measurement
-                }
-                long endTime = System.nanoTime();
-
-                // Measure memory after operation
-                long afterMemory = getUsedMemory();
-                long rawDifference = afterMemory - beforeMemory;
-                System.out.printf("[DEBUG] %s - %s: beforeMemory: %d bytes, afterMemory: %d bytes, diff: %d bytes%n",
-                    name, operationName, beforeMemory, afterMemory, rawDifference);
-
-                // Calculate per-operation metrics
-                long timeTaken = endTime - startTime;
-                if (!operationName.equals("searchContact")) {
-                    // For operations with amplification, divide by amplification factor
-                    int amplificationFactor = Math.max(500, currentBatchSize / 2);
-                    timeTaken = timeTaken / amplificationFactor;
-                    rawDifference = rawDifference / amplificationFactor;
-                }
-
-                // Use actual measurement without artificial inflation
-                long memoryUsed = Math.max(rawDifference, 0); // Only prevent negative values
-                System.out.printf("[DEBUG] %s - %s: final memoryUsed: %d bytes%n",
-                    name, operationName, memoryUsed);
-
-                PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, name, operationName);
+                PerformanceMetric metric = measureOperationRobustly(operationName, name, () -> operation.apply(ds));
                 runMetrics.add(metric);
             }
 
@@ -884,144 +866,174 @@ public class DataStructureComparator {
     }
 
     /**
-     * Gets the current memory usage in bytes.
+     * Gets the current memory usage in bytes with improved accuracy.
+     * Uses multiple measurements and stabilization to reduce artifacts.
      */
     private static long getUsedMemory() {
+        // Force GC and stabilize memory before measurement
+        System.gc();
+        try { Thread.sleep(10); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        System.gc();
+        try { Thread.sleep(10); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+
         Runtime runtime = Runtime.getRuntime();
         return runtime.totalMemory() - runtime.freeMemory();
     }
 
+
+
+
+
+
+
+
+
+
+
     /**
-     * Calculates realistic memory usage based on actual timing data and operation characteristics.
-     * This provides meaningful estimates when direct memory measurement shows no allocation.
+     * Robust measurement method that works consistently across different devices and JVM environments.
+     * Uses multiple measurement strategies and validation to ensure reliable results.
      */
-    private long calculateRealisticMemoryFromTime(String structureName, String operationName, int dataSize, long timeTakenNanos) {
-        // Convert time to milliseconds for easier calculation
-        double timeMs = timeTakenNanos / 1_000_000.0;
-
-        // Base memory that scales with data size and operation complexity
-        long baseMemory = 1024; // 1KB minimum
-
-        // Calculate memory based on time complexity and data structure characteristics
-        switch (structureName) {
-            case "Adjacency Matrix":
-                switch (operationName) {
-                    case "searchContact":
-                        // Matrix search can be O(n) in worst case, time reflects complexity
-                        return Math.max((long)(timeMs * 50 + Math.sqrt(dataSize) * 2), baseMemory);
-                    case "updateContact":
-                        // Matrix update requires finding and modifying entries
-                        return Math.max((long)(timeMs * 100 + Math.log(dataSize) * 8), baseMemory);
-                    case "deleteContact":
-                        // Matrix delete requires clearing row/column
-                        return Math.max((long)(timeMs * 80 + Math.sqrt(dataSize) * 4), baseMemory);
-                    default:
-                        return baseMemory;
-                }
-
-            case "Adjacency List":
-                switch (operationName) {
-                    case "searchContact":
-                        // List search through HashMap, time reflects lookup complexity
-                        return Math.max((long)(timeMs * 30 + Math.log(dataSize) * 4), baseMemory);
-                    case "updateContact":
-                        // HashMap modification + list updates
-                        return Math.max((long)(timeMs * 60 + Math.log(dataSize) * 6), baseMemory);
-                    case "deleteContact":
-                        // HashMap removal + list cleanup
-                        return Math.max((long)(timeMs * 50 + Math.log(dataSize) * 5), baseMemory);
-                    default:
-                        return baseMemory;
-                }
-
-            case "HashMap":
-                switch (operationName) {
-                    case "searchContact":
-                        // O(1) HashMap lookup, minimal time = minimal memory
-                        return Math.max((long)(timeMs * 20 + Math.log(dataSize) * 2), baseMemory);
-                    case "updateContact":
-                        // O(1) HashMap modification
-                        return Math.max((long)(timeMs * 40 + Math.log(dataSize) * 3), baseMemory);
-                    case "deleteContact":
-                        // O(1) HashMap removal
-                        return Math.max((long)(timeMs * 35 + Math.log(dataSize) * 2.5), baseMemory);
-                    default:
-                        return baseMemory;
-                }
-
-            default:
-                return baseMemory;
+    private <T> PerformanceMetric measureOperationRobustly(String operationName, String structureName, Supplier<T> operation) {
+        // Strategy 1: Direct measurement for operations that don't allocate memory
+        if (isNonAllocatingOperation(operationName)) {
+            return measureNonAllocatingOperation(operationName, structureName, operation);
         }
+
+        // Strategy 2: Amplified measurement for operations that may allocate small amounts
+        return measureWithAmplification(operationName, structureName, operation);
     }
 
     /**
-     * Calculates realistic memory usage for operations based on data structure characteristics,
-     * operation complexity, and actual timing data to provide meaningful memory estimates.
+     * Determines if an operation typically doesn't allocate new memory.
      */
-    private long calculateRealisticMemoryUsage(String structureName, String operationName, int dataSize, long timeTakenNanos) {
-        long baseMemory = 1024; // 1KB minimum
+    private boolean isNonAllocatingOperation(String operationName) {
+        return operationName.equals("searchContact") ||
+               operationName.equals("deleteContact");
+    }
 
-        // Convert time to milliseconds for easier calculation
-        double timeMs = timeTakenNanos / 1_000_000.0;
+    /**
+     * Measures operations that don't allocate memory using direct measurement with validation.
+     */
+    private <T> PerformanceMetric measureNonAllocatingOperation(String operationName, String structureName, Supplier<T> operation) {
+        // Extended stabilization for cross-device consistency
+        stabilizeMemoryEnvironment();
 
-        // Data structure specific memory characteristics with realistic scaling
-        switch (structureName) {
-            case "Adjacency Matrix":
-                switch (operationName) {
-                    case "listAllContacts":
-                        // Matrix listing requires scanning entire matrix + result collection
-                        return Math.max((long)(dataSize * 12 + timeMs * 100), baseMemory);
-                    case "searchContact":
-                        // Matrix search has O(n) complexity in worst case - more memory intensive
-                        return Math.max((long)(Math.sqrt(dataSize) * 16 + timeMs * 200 + dataSize * 0.5), (long)(baseMemory * 2));
-                    case "updateContact":
-                        // Matrix update requires finding and modifying entries - complex operation
-                        return Math.max((long)(Math.log(dataSize) * 32 + timeMs * 300 + dataSize * 0.3), (long)(baseMemory * 2));
-                    case "deleteContact":
-                        // Matrix delete requires clearing row/column - memory intensive
-                        return Math.max((long)(Math.sqrt(dataSize) * 12 + timeMs * 250 + dataSize * 0.4), (long)(baseMemory * 2));
-                    default:
-                        return baseMemory;
-                }
+        // Take baseline measurement with multiple samples for accuracy
+        long baselineMemory = getStableMemoryMeasurement();
 
-            case "Adjacency List":
-                switch (operationName) {
-                    case "listAllContacts":
-                        // List traversal + result collection
-                        return Math.max((long)(dataSize * 8 + timeMs * 80), baseMemory);
-                    case "searchContact":
-                        // HashMap lookup with potential list traversal - moderate complexity
-                        return Math.max((long)(Math.log(dataSize) * 24 + timeMs * 150 + dataSize * 0.2), (long)(baseMemory * 1.5));
-                    case "updateContact":
-                        // HashMap modification + list updates - moderate complexity
-                        return Math.max((long)(Math.log(dataSize) * 20 + timeMs * 200 + dataSize * 0.25), (long)(baseMemory * 1.5));
-                    case "deleteContact":
-                        // HashMap removal + list cleanup - moderate complexity
-                        return Math.max((long)(Math.log(dataSize) * 16 + timeMs * 180 + dataSize * 0.2), (long)(baseMemory * 1.5));
-                    default:
-                        return baseMemory;
-                }
+        // Measure operation timing
+        long startTime = System.nanoTime();
+        T result = operation.get();
+        long endTime = System.nanoTime();
 
-            case "HashMap":
-                switch (operationName) {
-                    case "listAllContacts":
-                        // Efficient HashMap iteration + result collection
-                        return Math.max((long)(dataSize * 6 + timeMs * 60), baseMemory);
-                    case "searchContact":
-                        // O(1) HashMap lookup - minimal but still measurable
-                        return Math.max((long)(Math.log(dataSize) * 8 + timeMs * 100 + dataSize * 0.1), baseMemory);
-                    case "updateContact":
-                        // O(1) HashMap modification - minimal but still measurable
-                        return Math.max((long)(Math.log(dataSize) * 12 + timeMs * 120 + dataSize * 0.15), baseMemory);
-                    case "deleteContact":
-                        // O(1) HashMap removal - minimal but still measurable
-                        return Math.max((long)(Math.log(dataSize) * 10 + timeMs * 110 + dataSize * 0.12), baseMemory);
-                    default:
-                        return baseMemory;
-                }
+        // Measure memory after operation with stabilization
+        stabilizeMemoryEnvironment();
+        long afterMemory = getStableMemoryMeasurement();
 
+        long rawDifference = afterMemory - baselineMemory;
+        long timeTaken = endTime - startTime;
+
+        System.out.printf("[DEBUG] %s - %s: beforeMemory: %d bytes, afterMemory: %d bytes, diff: %d bytes%n",
+            structureName, operationName, baselineMemory, afterMemory, rawDifference);
+
+        // Use actual measurement only - no artificial calculations
+        long memoryUsed = Math.max(rawDifference, 0);
+
+        System.out.printf("[DEBUG] %s - %s: final memoryUsed: %d bytes%n",
+            structureName, operationName, memoryUsed);
+
+        return new PerformanceMetric(timeTaken, memoryUsed, structureName, operationName);
+    }
+
+    /**
+     * Measures operations with amplification for better signal detection.
+     */
+    private <T> PerformanceMetric measureWithAmplification(String operationName, String structureName, Supplier<T> operation) {
+        // Extended stabilization for cross-device consistency
+        stabilizeMemoryEnvironment();
+        long beforeMemory = getStableMemoryMeasurement();
+
+        // Use adaptive amplification based on data size and operation type
+        int amplificationFactor = calculateAmplificationFactor(operationName, currentBatchSize);
+
+        long startTime = System.nanoTime();
+        List<T> results = new ArrayList<>();
+        for (int amp = 0; amp < amplificationFactor; amp++) {
+            T result = operation.get();
+            results.add(result);
+        }
+        long endTime = System.nanoTime();
+
+        // Clear results immediately to measure actual operation memory
+        results.clear();
+
+        // Measure memory after operations with stabilization
+        stabilizeMemoryEnvironment();
+        long afterMemory = getStableMemoryMeasurement();
+
+        long rawDifference = afterMemory - beforeMemory;
+        long timeTaken = (endTime - startTime) / amplificationFactor;
+
+        System.out.printf("[DEBUG] %s - %s: beforeMemory: %d bytes, afterMemory: %d bytes, diff: %d bytes (amplified by %d)%n",
+            structureName, operationName, beforeMemory, afterMemory, rawDifference, amplificationFactor);
+
+        // Calculate per-operation memory usage
+        long memoryUsed = Math.max(rawDifference / amplificationFactor, 0);
+
+        System.out.printf("[DEBUG] %s - %s: final memoryUsed: %d bytes%n",
+            structureName, operationName, memoryUsed);
+
+        return new PerformanceMetric(timeTaken, memoryUsed, structureName, operationName);
+    }
+
+    /**
+     * Stabilizes the memory environment for consistent measurements across devices.
+     */
+    private void stabilizeMemoryEnvironment() {
+        // Multiple GC calls with delays for thorough cleanup
+        for (int i = 0; i < 3; i++) {
+            System.gc();
+            try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        }
+
+        // Additional stabilization delay for different JVM behaviors
+        try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    }
+
+    /**
+     * Gets a stable memory measurement by taking multiple readings and using median.
+     */
+    private long getStableMemoryMeasurement() {
+        List<Long> measurements = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            measurements.add(getUsedMemory());
+            if (i < 4) {
+                try { Thread.sleep(10); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            }
+        }
+
+        // Sort and return median for stability
+        measurements.sort(Long::compareTo);
+        return measurements.get(measurements.size() / 2);
+    }
+
+
+
+    /**
+     * Calculates appropriate amplification factor based on operation and data size.
+     */
+    private int calculateAmplificationFactor(String operationName, int dataSize) {
+        switch (operationName) {
+            case "listAllContacts":
+                // List operations need less amplification as they return large results
+                return Math.max(10, Math.min(100, dataSize / 100));
+            case "updateContact":
+                // Update operations need moderate amplification
+                return Math.max(100, Math.min(1000, dataSize / 10));
             default:
-                return baseMemory;
+                // Default amplification for other operations
+                return Math.max(100, Math.min(2000, dataSize / 5));
         }
     }
 }

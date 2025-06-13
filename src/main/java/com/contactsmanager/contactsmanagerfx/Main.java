@@ -36,8 +36,8 @@ public class Main {
 
 
     private static void runCustomTest() {
-        System.out.print("Enter number of contacts: ");
-        int contactCount = getIntInput();
+        System.out.print("Enter number of contacts (1-10000): ");
+        int contactCount = getValidatedContactInput();
 
         System.out.println("Available operations:");
         System.out.println("- add: Test adding a contact");
@@ -67,6 +67,35 @@ public class Main {
                 return Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
                 System.out.print("Please enter a valid number: ");
+            }
+        }
+    }
+
+    /**
+     * Gets validated input for the number of contacts, ensuring it's between 1 and 10,000.
+     * Provides helpful guidance and error messages for invalid input.
+     */
+    private static int getValidatedContactInput() {
+        final int MIN_CONTACTS = 1;
+        final int MAX_CONTACTS = 10000;
+
+        while (true) {
+            try {
+                int contactCount = Integer.parseInt(scanner.nextLine());
+
+                if (contactCount < MIN_CONTACTS) {
+                    System.out.printf("Number of contacts must be at least %d. Please enter a valid number (1-10000): ", MIN_CONTACTS);
+                } else if (contactCount > MAX_CONTACTS) {
+                    System.out.printf("Number of contacts cannot exceed %d. Please enter a valid number (1-10000): ", MAX_CONTACTS);
+                } else {
+                    // Valid input - provide helpful information for large datasets
+                    if (contactCount >= 5000) {
+                        System.out.printf("Testing with %d contacts - this may take a few moments for large operations like 'add'...%n", contactCount);
+                    }
+                    return contactCount;
+                }
+            } catch (NumberFormatException e) {
+                System.out.print("Please enter a valid integer between 1 and 10000: ");
             }
         }
     }

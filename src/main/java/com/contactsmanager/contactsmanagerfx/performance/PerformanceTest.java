@@ -14,24 +14,26 @@ public class PerformanceTest {
     private static final int DEFAULT_RUNS = 10; // Run each test 10 times for better averaging
     private static final AtomicInteger contactCounter = new AtomicInteger(0);
 
+
+
     /**
-     * Runs a custom performance test with specific operations.
+     * Runs a performance test with configurable density.
      */
-    public static void runCustomTest(int contactCount, String... operations) {
-        System.out.println("\n=== Performance Test ===");
-        System.out.printf("Contacts: %d | Operations: %s\n\n",
+    public static void runAdvancedTest(int contactCount, double connectionDensity, String... operations) {
+        System.out.println("\n=== PERFORMANCE TEST ===");
+        System.out.printf("Contacts: %d | Operations: %s\n",
             contactCount, String.join(", ", operations));
-    
+
         // Create data structures with proper sizing
         AdjacencyListGraphCB graph = new AdjacencyListGraphCB();
         AdjacencyMatrixGraphCB matrixGraph = new AdjacencyMatrixGraphCB(Math.min(contactCount, 3000));
         HashMapCB hash = new HashMapCB();
-    
-        // Setup the comparator
+
+        // Setup the enhanced comparator with runtime environment monitoring
         DataStructureComparator comparator = new DataStructureComparator(DEFAULT_RUNS)
                 .addDataStructure(graph, graph, "Adjacency List")
                 .addDataStructure(matrixGraph, matrixGraph, "Adjacency Matrix")
-                .addDataStructure(hash, hash, "HashMap"); // HashMap now implements both interfaces
+                .addDataStructure(hash, "HashMap");
 
         // Always generate contacts
         Contact[] contacts = new Contact[contactCount];
@@ -41,6 +43,9 @@ public class PerformanceTest {
 
         // Only populate the data structures if the operation needs existing data
         if (needsInitialContacts(operations)) {
+            System.out.println("Initializing data structures...");
+            long setupStart = System.currentTimeMillis();
+
             // Suppress console output during setup to avoid measurement interference
             PerformanceMeasurement.suppressConsoleOutput(() -> {
                 for (Contact contact : contacts) {
@@ -49,17 +54,20 @@ public class PerformanceTest {
                     hash.addContact(contact);
                 }
             });
+
+            long setupTime = System.currentTimeMillis() - setupStart;
+            System.out.printf("Setup completed in %d ms\n", setupTime);
+
             // Set the batch size to reflect the number of contacts actually added
             comparator.setBatchSize(contactCount);
 
-            // Generate realistic connections if suggest or connection operations are requested
-            if (needsConnections(operations)) {
-                System.out.println("Generating realistic connection data for meaningful suggestions...");
-                // Use 15% connection density for realistic social network simulation
-                comparator.generateConnections(0.15);
+            // Generate realistic connections with specified density
+            if (needsConnections(operations) || connectionDensity > 0) {
+                System.out.printf("Generating connections...\n");
+                comparator.generateConnections(connectionDensity);
             }
         }
-    
+
         // Run the requested operations
         for (String operation : operations) {
             System.out.println("Testing: " + operation.toUpperCase());
@@ -106,12 +114,11 @@ public class PerformanceTest {
             }
             System.out.println();
         }
-    
+
         System.out.println("=== Results ===");
         comparator.printSummary();
         System.out.println("\nTest complete.");
     }
-    
 
     /**
      * Checks if any of the operations require initial contacts to be present.

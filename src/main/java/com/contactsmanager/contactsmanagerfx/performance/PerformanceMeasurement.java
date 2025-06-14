@@ -107,7 +107,7 @@ public class PerformanceMeasurement {
 
         // Multiple warmup runs for JIT optimization
         for (int i = 0; i < 3; i++) {
-            suppressConsoleOutputWithResult(() -> operation.execute());
+            suppressConsoleOutputWithResult(operation);
         }
 
         // Stabilize memory before measurement
@@ -120,7 +120,7 @@ public class PerformanceMeasurement {
         T result = null;
         long startTime = System.nanoTime();
         for (int i = 0; i < iterations; i++) {
-            result = suppressConsoleOutputWithResult(() -> operation.execute());
+            result = suppressConsoleOutputWithResult(operation);
         }
         long endTime = System.nanoTime();
 
@@ -147,18 +147,6 @@ public class PerformanceMeasurement {
         return runtime.totalMemory() - runtime.freeMemory();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Suppresses console output during operation execution to prevent I/O overhead.
      */
@@ -177,12 +165,28 @@ public class PerformanceMeasurement {
     /**
      * Suppresses console output during operation execution and returns the result.
      */
-    private static <T> T suppressConsoleOutputWithResult(Operation<T> operation) {
+    public static <T> T suppressConsoleOutputWithResult(Operation<T> operation) {
         PrintStream originalOut = System.out;
         try {
             // Redirect System.out to a dummy stream
             System.setOut(new PrintStream(new ByteArrayOutputStream()));
             return operation.execute();
+        } finally {
+            // Restore original System.out
+            System.setOut(originalOut);
+        }
+    }
+
+    /**
+     * Suppresses console output during operation execution and returns the result.
+     * Overloaded version that accepts a Supplier.
+     */
+    public static <T> T suppressConsoleOutputWithResult(java.util.function.Supplier<T> operation) {
+        PrintStream originalOut = System.out;
+        try {
+            // Redirect System.out to a dummy stream
+            System.setOut(new PrintStream(new ByteArrayOutputStream()));
+            return operation.get();
         } finally {
             // Restore original System.out
             System.setOut(originalOut);

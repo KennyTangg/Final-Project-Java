@@ -129,17 +129,4 @@ public class PerformanceMetric {
             return String.format("%.6f KB", memoryKB);
         }
     }
-
-    private static long getUsedMemory() {
-        Runtime runtime = Runtime.getRuntime();
-        return runtime.totalMemory() - runtime.freeMemory();
-    }
-
-    private static long measureDataStructureMemory(Object dataStructure) {
-        // Implementation of measureDataStructureMemory method
-        // This method should return the memory used by the data structure
-        // For example, you can use System.identityHashCode(dataStructure) to get the memory
-        // or use a memory profiler to measure the actual memory usage
-        return 0; // Placeholder return, actual implementation needed
-    }
 }

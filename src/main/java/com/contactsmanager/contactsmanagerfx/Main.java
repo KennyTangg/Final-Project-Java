@@ -34,11 +34,17 @@ public class Main {
         }
     }
 
-
     private static void runCustomTest() {
+        System.out.println("\n=== PERFORMANCE TESTING ===");
+
+        // Get test configuration
         System.out.print("Enter number of contacts (1-10000): ");
         int contactCount = getValidatedContactInput();
 
+        runSingleOperationTest(contactCount, 0.1); // Use default 10% density
+    }
+
+    private static void runSingleOperationTest(int contactCount, double density) {
         System.out.println("Available operations:");
         System.out.println("- add: Test adding a contact");
         System.out.println("- search: Test searching for a contact");
@@ -57,9 +63,8 @@ public class Main {
             operations[i] = operations[i].trim();
         }
 
-        PerformanceTest.runCustomTest(contactCount, operations);
+        PerformanceTest.runAdvancedTest(contactCount, density, operations);
     }
-
 
     private static int getIntInput() {
         while (true) {

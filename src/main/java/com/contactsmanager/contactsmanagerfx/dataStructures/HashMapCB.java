@@ -1,32 +1,27 @@
 package com.contactsmanager.contactsmanagerfx.dataStructures;
 
-import com.contactsmanager.contactsmanagerfx.interfaces.ConnectionsManager;
 import com.contactsmanager.contactsmanagerfx.interfaces.ContactsManager;
 import com.contactsmanager.contactsmanagerfx.model.Contact;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * This class is a Contacts Book that is implemented using HashMap with adjacency list for connections.
- * Uses Map<String, Contact> for O(1) contact lookup and Map<String, List<String>> for O(1) connection management.
+ * This class is a Contacts Book that is implemented using HashMap.
+ * Uses Map<String, Contact> for O(1) contact lookup.
  * CB stands for Contacts Book.
  */
-public class HashMapCB implements ContactsManager, ConnectionsManager {
+public class HashMapCB implements ContactsManager {
 
     private final Map<String, Contact> contacts;
-    private final Map<String, List<String>> connections;
 
     /**
-     * Constructs a new, empty HashMap-based contact book with connection management.
+     * Constructs a new, empty HashMap-based contact book.
      */
     public HashMapCB() {
         this.contacts = new HashMap<>();
-        this.connections = new HashMap<>();
     }
 
     /*========================================================================*/
@@ -44,7 +39,6 @@ public class HashMapCB implements ContactsManager, ConnectionsManager {
             return;
         }
         contacts.put(key, contact); // Add contact
-        connections.put(key, new ArrayList<>()); // Initialize empty connection list
         System.out.println("Added contact. Name: '" + contact.getName() + "' | Student ID: " + contact.getStudentId() +".");
     }
 
@@ -62,25 +56,10 @@ public class HashMapCB implements ContactsManager, ConnectionsManager {
             return;
         }
 
-        // Transfer connections to new key if name changed
-        List<String> contactConnections = connections.get(oldKey);
         contacts.remove(oldKey);
-        connections.remove(oldKey);
-
         Contact updated = new Contact(newName, newStudentId);
         contacts.put(newKey, updated);
-        connections.put(newKey, contactConnections != null ? contactConnections : new ArrayList<>());
-
-        // Update references in other contacts' connection lists
-        if (!oldKey.equals(newKey)) {
-            for (List<String> connectionList : connections.values()) {
-                for (int i = 0; i < connectionList.size(); i++) {
-                    if (connectionList.get(i).equals(oldKey)) {
-                        connectionList.set(i, newKey);
-                    }
-                }
-            }
-        }
+        System.out.println("Updated contact: " + oldKey + " -> " + newName);
     }
 
     // DELETE NODE
@@ -91,17 +70,13 @@ public class HashMapCB implements ContactsManager, ConnectionsManager {
     public void deleteContact(String name) {
         String key = name.toLowerCase();
         if (contacts.remove(key) != null) {
-            // Remove all connections to this contact
-            connections.remove(key);
-            // Remove this contact from other contacts' connection lists
-            for (List<String> connectionList : connections.values()) {
-                connectionList.remove(key);
-            }
             System.out.println("Deleted contact: " + name);
         } else {
             System.out.println("Contact not found: " + name);
         }
     }
+
+
 
     // SEARCH NODE
     /**
@@ -117,104 +92,7 @@ public class HashMapCB implements ContactsManager, ConnectionsManager {
         return result;
     }
 
-    /*========================================================================*/
-    /*===== Connections Management ===========================================*/
 
-    /*========================================================================*/
-    /*===== Connections Management ===========================================*/
-
-    @Override
-    public void addConnection(String contact1, String contact2) {
-        String key1 = contact1.toLowerCase();
-        String key2 = contact2.toLowerCase();
-
-        // Validate both contacts exist
-        if (!contacts.containsKey(key1) || !contacts.containsKey(key2)) {
-            System.out.println("One or both contacts not found.");
-            return;
-        }
-
-        // Prevent self-connection
-        if (key1.equals(key2)) {
-            System.out.println("Cannot connect a contact to themselves.");
-            return;
-        }
-
-        // Add bidirectional connection
-        List<String> connections1 = connections.get(key1);
-        List<String> connections2 = connections.get(key2);
-
-        if (!connections1.contains(key2)) {
-            connections1.add(key2);
-            connections2.add(key1);
-            System.out.println("Connection added between " + contact1 + " and " + contact2);
-        } else {
-            System.out.println("Connection between " + contact1 + " and " + contact2 + " already exists.");
-        }
-    }
-
-    @Override
-    public void removeConnection(String contact1, String contact2) {
-        String key1 = contact1.toLowerCase();
-        String key2 = contact2.toLowerCase();
-
-        // Validate both contacts exist
-        if (!contacts.containsKey(key1) || !contacts.containsKey(key2)) {
-            System.out.println("One or both contacts not found.");
-            return;
-        }
-
-        // Remove bidirectional connection
-        List<String> connections1 = connections.get(key1);
-        List<String> connections2 = connections.get(key2);
-
-        if (connections1.remove(key2)) {
-            connections2.remove(key1);
-            System.out.println("Connection removed between " + contact1 + " and " + contact2);
-        } else {
-            System.out.println("No connection exists between " + contact1 + " and " + contact2);
-        }
-    }
-
-    @Override
-    public List<Contact> suggestContacts(String contact) {
-        String key = contact.toLowerCase();
-        List<Contact> suggestions = new ArrayList<>();
-
-        if (!contacts.containsKey(key)) {
-            System.out.println("Contact not found: " + contact);
-            return suggestions;
-        }
-
-        List<String> directConnections = connections.get(key);
-        if (directConnections.isEmpty()) {
-            System.out.println("Unable to suggest contacts from not knowing anyone.");
-            return suggestions;
-        }
-
-        // Use Set to avoid duplicates
-        Set<String> suggested = new HashSet<>();
-
-        // Find friends of friends
-        for (String friendKey : directConnections) {
-            List<String> friendsConnections = connections.get(friendKey);
-            for (String friendOfFriendKey : friendsConnections) {
-                // Don't suggest self or direct connections
-                if (!friendOfFriendKey.equals(key) &&
-                    !directConnections.contains(friendOfFriendKey) &&
-                    !suggested.contains(friendOfFriendKey)) {
-                    suggested.add(friendOfFriendKey);
-                    suggestions.add(contacts.get(friendOfFriendKey));
-                }
-            }
-        }
-
-        if (suggestions.isEmpty()) {
-            System.out.println(contact + "'s friends don't know anyone new.");
-        }
-
-        return suggestions;
-    }
 
     /*========================================================================*/
     /*===== Printing and Getters Management ==================================*/
@@ -248,11 +126,5 @@ public class HashMapCB implements ContactsManager, ConnectionsManager {
         return contacts;
     }
 
-    /**
-     * Getter for the connections map.
-     * @return the connections map in Map<String, List<String>>
-     */
-    public Map<String, List<String>> getConnections() {
-        return connections;
-    }
+
 }

@@ -5,14 +5,12 @@ import com.contactsmanager.contactsmanagerfx.interfaces.ConnectionsManager;
 import com.contactsmanager.contactsmanagerfx.model.Contact;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.Comparator;
 
 /**
  * A utility class for comparing the performance of different data structure implementations.
@@ -27,7 +25,6 @@ public class DataStructureComparator {
     private final Map<String, Map<String, List<PerformanceMetric>>> results;
     private final int runs;
     private static final double OUTLIER_THRESHOLD = 1.5; // IQR multiplier for outlier detection
-    private static final int DEFAULT_RUNS = 10; // Default number of test runs
 
     private int currentBatchSize = 0; // Add this field to track the actual batch size
     private static final int MAX_MATRIX_SIZE = 10000; // Maximum size for adjacency matrix
@@ -140,7 +137,6 @@ public class DataStructureComparator {
                 // Stabilize memory and get baseline
                 System.gc();
                 try { Thread.sleep(150); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                long baselineMemory = getUsedMemory();
 
                 // Create data structure and measure its memory footprint
                 long beforeMemory = getUsedMemory();
@@ -212,6 +208,45 @@ public class DataStructureComparator {
     public DataStructureComparator generateConnections(double connectionDensity) {
         System.out.println("\n=== Generating Realistic Connection Data ===");
 
+        // Calculate target connections once for all data structures to ensure consistency
+        int targetConnections = 0;
+        int contactCount = 0;
+
+        // Get contact count from the first available data structure
+        for (int i = 0; i < connectionStructures.size(); i++) {
+            if (connectionStructures.get(i) != null) {
+                ContactsManager contactManager = contactStructures.get(i);
+                List<Contact> allContacts = contactManager.listAllContacts();
+                contactCount = allContacts.size();
+                break;
+            }
+        }
+
+        if (contactCount >= 2) {
+            int maxPossibleConnections = (contactCount * (contactCount - 1)) / 2;
+
+            // Use consistent calculation for all data structures
+            if (contactCount <= 1000) {
+                targetConnections = (int) (maxPossibleConnections * connectionDensity);
+            } else {
+                // For large datasets, use a fixed connections-per-contact approach
+                int connectionsPerContact = Math.max(3, (int)(contactCount * 0.01));
+                connectionsPerContact = Math.min(connectionsPerContact, 50);
+                targetConnections = (contactCount * connectionsPerContact) / 2;
+            }
+
+            // Apply consistent limits
+            int minConnectionsPerContact = Math.min(3, contactCount - 1);
+            int minTotalConnections = (contactCount * minConnectionsPerContact) / 2;
+            targetConnections = Math.max(targetConnections, minTotalConnections);
+
+            int maxReasonableConnections = Math.min(maxPossibleConnections, contactCount * 20);
+            targetConnections = Math.min(targetConnections, maxReasonableConnections);
+
+            double actualDensity = (double) targetConnections / maxPossibleConnections * 100;
+            System.out.printf("Target connections for all structures: %d (%.3f%% density)\n", targetConnections, actualDensity);
+        }
+
         for (int i = 0; i < connectionStructures.size(); i++) {
             ConnectionsManager cm = connectionStructures.get(i);
             String name = structureNames.get(i);
@@ -232,32 +267,8 @@ public class DataStructureComparator {
 
             System.out.printf("Generating connections for %s with %d contacts...\n", name, allContacts.size());
 
-            // Calculate number of connections to create with reasonable limits
-            int maxPossibleConnections = (allContacts.size() * (allContacts.size() - 1)) / 2; // n*(n-1)/2 for undirected graph
-
-            // For large datasets, use a more reasonable approach
-            int targetConnections;
-            if (allContacts.size() <= 1000) {
-                // For small datasets, use percentage-based approach
-                targetConnections = (int) (maxPossibleConnections * connectionDensity);
-            } else {
-                // For large datasets, use connections-per-contact approach to avoid exponential growth
-                int connectionsPerContact = Math.max(3, (int)(allContacts.size() * 0.01)); // 1% of contacts, minimum 3
-                connectionsPerContact = Math.min(connectionsPerContact, 50); // Cap at 50 connections per contact
-                targetConnections = (allContacts.size() * connectionsPerContact) / 2;
-            }
-
-            // Ensure each contact has at least 2-3 connections for meaningful suggestions
-            int minConnectionsPerContact = Math.min(3, allContacts.size() - 1);
-            int minTotalConnections = (allContacts.size() * minConnectionsPerContact) / 2;
-            targetConnections = Math.max(targetConnections, minTotalConnections);
-
-            // Cap the maximum to prevent excessive generation time
-            int maxReasonableConnections = Math.min(maxPossibleConnections, allContacts.size() * 20);
-            targetConnections = Math.min(targetConnections, maxReasonableConnections);
-
-            double actualDensity = (double) targetConnections / maxPossibleConnections * 100;
-            System.out.printf("Target connections: %d (%.3f%% density)\n", targetConnections, actualDensity);
+            // Calculate max possible connections for this specific data structure
+            int maxPossibleConnections = (allContacts.size() * (allContacts.size() - 1)) / 2;
 
             // Create connections using a random but balanced approach
             java.util.Random random = new java.util.Random(42); // Fixed seed for reproducible results
@@ -498,8 +509,6 @@ public class DataStructureComparator {
         return this;
     }
 
-
-
     /**
      * Compares the performance of listing all contacts across all data structures.
      *
@@ -554,38 +563,6 @@ public class DataStructureComparator {
     }
 
     /**
-     * Compares the performance of a contact-bound operation across all data structures.
-     *
-     * @param operationName The name of the operation
-     * @param operation The operation to perform
-     * @return This DataStructureComparator for method chaining
-     */
-    public DataStructureComparator compareContactOperation(String operationName, Consumer<ContactsManager> operation) {
-        for (int i = 0; i < contactStructures.size(); i++) {
-            ContactsManager ds = contactStructures.get(i);
-            String name = structureNames.get(i);
-
-            List<PerformanceMetric> runMetrics = new ArrayList<>();
-            for (int run = 0; run < runs; run++) {
-                PerformanceMetric metric = PerformanceMeasurement.measure(
-                    () -> operation.accept(ds),
-                    name,
-                    operationName,
-                    currentBatchSize
-                );
-                runMetrics.add(metric);
-            }
-
-            PerformanceMetric finalMetric = removeOutliersAndAverage(runMetrics, name, operationName);
-            results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(finalMetric);
-
-            // Show only actual measurements
-            System.out.printf("%s%n", finalMetric);
-        }
-        return this;
-    }
-
-    /**
      * Compares the performance of a contact operation that returns a result across all data structures.
      * Uses device-agnostic measurement approach for consistent results across different environments.
      *
@@ -595,8 +572,6 @@ public class DataStructureComparator {
      * @return This DataStructureComparator for method chaining
      */
     public <T> DataStructureComparator compareContactOperationWithResult(String operationName, Function<ContactsManager, T> operation) {
-
-
         for (int i = 0; i < contactStructures.size(); i++) {
             ContactsManager ds = contactStructures.get(i);
             String name = structureNames.get(i);
@@ -632,7 +607,12 @@ public class DataStructureComparator {
             String name = structureNames.get(i);
 
             if (cm == null) {
-                System.out.printf("[SKIPPED] %s - %s: No connection manager implemented.\n", name, operationName);
+                System.out.printf("[SKIPPED] %s - %s: Connection operations not supported (contacts-only implementation).\n", name, operationName);
+
+                // Add a placeholder result to maintain consistency in results
+                PerformanceMetric placeholderMetric = new PerformanceMetric(0, 0, name, operationName);
+                results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(placeholderMetric);
+                System.out.printf("Time: 0.000000 ms, Memory: 0 bytes\n");
                 continue;
             }
 
@@ -692,8 +672,23 @@ public class DataStructureComparator {
             String name = structureNames.get(i);
 
             if (cm == null) {
-                System.out.printf("[SKIPPED] %s - %s: No connection manager implemented.\n", name, operationName);
+                System.out.printf("[SKIPPED] %s - %s: Connection operations not supported (contacts-only implementation).\n", name, operationName);
+
+                // Add a placeholder result to maintain consistency in results
+                PerformanceMetric placeholderMetric = new PerformanceMetric(0, 0, name, operationName);
+                results.get(name).computeIfAbsent(operationName, k -> new ArrayList<>()).add(placeholderMetric);
+                System.out.printf("Time: 0.000000 ms, Memory: 0 bytes\n");
                 continue;
+            }
+
+            // Perform extensive warmup for the first data structure to eliminate JVM initialization overhead
+            if (i == 0) {
+                System.out.printf("  [%s] Performing JVM warmup for consistent measurements...%n", name);
+                for (int warmup = 0; warmup < 5; warmup++) {
+                    PerformanceMeasurement.suppressConsoleOutput(() -> operation.apply(cm));
+                    System.gc();
+                    try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                }
             }
 
             List<PerformanceMetric> runMetrics = new ArrayList<>();
@@ -701,19 +696,23 @@ public class DataStructureComparator {
                 // Show progress
                 System.out.printf("  [%s] Run %d/%d... ", name, run + 1, runs);
 
-                // Use the same direct memory measurement approach as addContact
-                System.gc();
-                try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                long beforeMemory = getUsedMemory();
+                // Extended stabilization for consistent cross-device measurements
+                stabilizeMemoryEnvironment();
+                long beforeMemory = getStableMemoryMeasurement();
 
                 long startTime = System.nanoTime();
-                T result = operation.apply(cm);
+                operation.apply(cm);
                 long endTime = System.nanoTime();
 
-                // Measure memory after operation
-                long afterMemory = getUsedMemory();
+                // Measure memory after operation with stabilization
+                stabilizeMemoryEnvironment();
+                long afterMemory = getStableMemoryMeasurement();
+
                 long rawDifference = afterMemory - beforeMemory;
                 long timeTaken = endTime - startTime;
+
+                System.out.printf("[DEBUG] %s - %s: beforeMemory: %d bytes, afterMemory: %d bytes, diff: %d bytes%n",
+                    name, operationName, beforeMemory, afterMemory, rawDifference);
 
                 // Handle negative memory differences (caused by GC during measurement)
                 long memoryUsed;
@@ -724,6 +723,9 @@ public class DataStructureComparator {
                     // Use actual measurement without artificial minimums
                     memoryUsed = rawDifference;
                 }
+
+                System.out.printf("[DEBUG] %s - %s: final memoryUsed: %d bytes%n",
+                    name, operationName, memoryUsed);
 
                 PerformanceMetric metric = new PerformanceMetric(timeTaken, memoryUsed, name, operationName);
                 runMetrics.add(metric);
@@ -792,13 +794,17 @@ public class DataStructureComparator {
 
 
     /**
-     * Prints a comprehensive summary of the performance comparison results with theoretical comparisons.
+     * Prints a comprehensive summary of the performance comparison results.
      */
     public void printSummary() {
         System.out.println("\n===== PERFORMANCE METRICS SUMMARY =====");
         System.out.println("Batch Size: " + currentBatchSize + " contacts");
         System.out.println("Runs per test: " + runs + " (averaged with outlier removal)");
-        System.out.println("\nTotal Metrics:");
+
+        // Add runtime environment analysis
+        analyzeRuntimeEnvironment();
+
+        System.out.println("\nPerformance Results:");
         System.out.println("----------------------------------------");
 
         for (String structureName : structureNames) {
@@ -819,14 +825,37 @@ public class DataStructureComparator {
                 double avgTotalTime = totalTime / (double)metrics.size();
                 double avgTotalMemory = totalMemory / (double)metrics.size();
 
-                // Show only actual measurements
-                System.out.printf("%s - %s: Total Time: %s, Total Memory: %d bytes%n",
+                // Show measurements
+                System.out.printf("%s - %s: Time: %s, Memory: %d bytes%n",
                     structureName, operation,
                     formatTime(avgTotalTime / 1_000_000.0),
                     (long)avgTotalMemory);
             }
         }
         System.out.println("========================================");
+    }
+
+    /**
+     * Provides runtime environment analysis for performance context.
+     */
+    private void analyzeRuntimeEnvironment() {
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory();
+        long totalMemory = runtime.totalMemory();
+        long freeMemory = runtime.freeMemory();
+        long usedMemory = totalMemory - freeMemory;
+
+        double memoryUsagePercent = (usedMemory * 100.0) / maxMemory;
+
+        System.out.printf("Runtime Environment: %.1f%% memory used", memoryUsagePercent);
+        if (memoryUsagePercent > 70) {
+            System.out.print(" ⚠️ HIGH");
+        } else if (memoryUsagePercent > 50) {
+            System.out.print(" ⚠️ MODERATE");
+        } else {
+            System.out.print(" ✅ GOOD");
+        }
+        System.out.println();
     }
 
     /**
@@ -848,24 +877,6 @@ public class DataStructureComparator {
     }
 
     /**
-     * Formats memory values to show appropriate precision based on magnitude.
-     * Ensures no value shows as 0.00 KB when it's actually non-zero.
-     */
-    private String formatMemory(double memoryKB) {
-        if (memoryKB >= 1.0) {
-            return String.format("%.2f KB", memoryKB);
-        } else if (memoryKB >= 0.1) {
-            return String.format("%.3f KB", memoryKB);
-        } else if (memoryKB >= 0.01) {
-            return String.format("%.4f KB", memoryKB);
-        } else if (memoryKB >= 0.001) {
-            return String.format("%.5f KB", memoryKB);
-        } else {
-            return String.format("%.6f KB", memoryKB);
-        }
-    }
-
-    /**
      * Gets the current memory usage in bytes with improved accuracy.
      * Uses multiple measurements and stabilization to reduce artifacts.
      */
@@ -879,16 +890,6 @@ public class DataStructureComparator {
         Runtime runtime = Runtime.getRuntime();
         return runtime.totalMemory() - runtime.freeMemory();
     }
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Robust measurement method that works consistently across different devices and JVM environments.
@@ -924,7 +925,7 @@ public class DataStructureComparator {
 
         // Measure operation timing
         long startTime = System.nanoTime();
-        T result = operation.get();
+        operation.get();
         long endTime = System.nanoTime();
 
         // Measure memory after operation with stabilization
@@ -1018,22 +1019,27 @@ public class DataStructureComparator {
         return measurements.get(measurements.size() / 2);
     }
 
-
-
     /**
      * Calculates appropriate amplification factor based on operation and data size.
+     * Uses consistent methodology for fair comparison across operations.
      */
     private int calculateAmplificationFactor(String operationName, int dataSize) {
+        // Use consistent amplification strategy for fair comparison
         switch (operationName) {
+            case "searchContact":
+            case "deleteContact":
+                // Non-allocating operations need minimal amplification
+                return 1; // Direct measurement is more accurate
             case "listAllContacts":
-                // List operations need less amplification as they return large results
-                return Math.max(10, Math.min(100, dataSize / 100));
+                // List operations allocate new collections - use minimal amplification
+                return Math.max(1, Math.min(10, dataSize / 1000));
             case "updateContact":
-                // Update operations need moderate amplification
-                return Math.max(100, Math.min(1000, dataSize / 10));
+            case "suggestContacts":
+                // Operations that may allocate temporary objects
+                return Math.max(10, Math.min(100, dataSize / 100));
             default:
-                // Default amplification for other operations
-                return Math.max(100, Math.min(2000, dataSize / 5));
+                // Conservative amplification for unknown operations
+                return Math.max(10, Math.min(50, dataSize / 200));
         }
     }
 }

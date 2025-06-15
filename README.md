@@ -67,44 +67,42 @@ The application uses a combination of GUI and terminal output:
 
 ```
 src/
-├── main/
-│   ├── java/
-│   │   └── com/
-│   │       └── contactsmanager/
-│   │           └── contactsmanagerfx/
-│   │               ├── dataStructures/
-│   │               │   ├── AbstractGraphCB.java
-│   │               │   ├── AdjacencyMatrixGraphCB.java
-│   │               │   └── HashImplementation.java
-│   │               ├── interfaces/
-│   │               │   ├── ConnectionsManager.java
-│   │               │   └── ContactsManager.java
-│   │               ├── model/
-│   │               │   └── Contact.java
-│   │               ├── performance/
-│   │               │   ├── PerformanceAnalyzer.java
-│   │               │   └── MetricsCollector.java
-│   │               ├── utility/
-│   │               │   └── DataLoader.java
-│   │               ├── App.java
-│   │               ├── AppDisplayController.java
-│   │               └── Main.java
-│   └── resources/
-│       └── com/
-│           └── contactsmanager/
-│               └── contactsmanagerfx/
-│                   ├── css/
-│                   │   └── stylesheet.css
-│                   └── views/
-│                       └── MainDisplay.fxml
-└── test/
-    └── java/
+└── main/
+    ├── java/
+    │   └── com/
+    │       └── contactsmanager/
+    │           └── contactsmanagerfx/
+    │               ├── dataStructures/
+    │               │   ├── AbstractGraphCB.java
+    │               │   ├── AdjacencyListGraphCB.java
+    │               │   ├── AdjacencyMatrixGraphCB.java
+    │               │   └── HashMapCB.java
+    │               ├── interfaces/
+    │               │   ├── ConnectionsManager.java
+    │               │   └── ContactsManager.java
+    │               ├── model/
+    │               │   └── Contact.java
+    │               ├── performance/
+    │               │   ├── DataStructureComparator.java
+    │               │   ├── PerformanceMeasurement.java
+    │               │   ├── PerformanceMetric.java
+    │               │   └── PerformanceTest.java
+    │               ├── utility/
+    │               │   ├── AdjacencyListGraphTableUtils.java
+    │               │   ├── AdjacencyMatrixGraphUtils.java
+    │               │   └── HashMapTableUtils.java
+    │               ├── App.java
+    │               ├── AppDisplayController.java
+    │               └── Main.java
+    └── resources/
         └── com/
             └── contactsmanager/
-                └── test/
-                    ├── AdjacencyMatrixTests.java
-                    ├── GraphTests.java
-                    └── HashTests.java
+                └── contactsmanagerfx/
+                    ├── css/
+                    │   └── stylesheet.css
+                    └── views/
+                        └── MainDisplay.fxml
+
 ```
 
 ## Performance Analysis

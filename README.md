@@ -207,8 +207,10 @@ The choice of data structure should depend on the specific use case:
 - Use Hash-based implementation for simple contact management without complex relationships
 
 ## Contributors
-Anastasia Larasati (2802547692)
-Kenny Tang (2802517733)
-Tiffany Widjaja (2802503791)
+- Anastasia Larasati (2802547692)
+- Kenny Tang (2802517733)
+- Tiffany Widjaja (2802503791)
+
 [OOP Class & Data Structures Class]
+
 [BINUS International]

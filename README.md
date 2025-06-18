@@ -67,44 +67,42 @@ The application uses a combination of GUI and terminal output:
 
 ```
 src/
-├── main/
-│   ├── java/
-│   │   └── com/
-│   │       └── contactsmanager/
-│   │           └── contactsmanagerfx/
-│   │               ├── dataStructures/
-│   │               │   ├── AbstractGraphCB.java
-│   │               │   ├── AdjacencyMatrixGraphCB.java
-│   │               │   └── HashImplementation.java
-│   │               ├── interfaces/
-│   │               │   ├── ConnectionsManager.java
-│   │               │   └── ContactsManager.java
-│   │               ├── model/
-│   │               │   └── Contact.java
-│   │               ├── performance/
-│   │               │   ├── PerformanceAnalyzer.java
-│   │               │   └── MetricsCollector.java
-│   │               ├── utility/
-│   │               │   └── DataLoader.java
-│   │               ├── App.java
-│   │               ├── AppDisplayController.java
-│   │               └── Main.java
-│   └── resources/
-│       └── com/
-│           └── contactsmanager/
-│               └── contactsmanagerfx/
-│                   ├── css/
-│                   │   └── stylesheet.css
-│                   └── views/
-│                       └── MainDisplay.fxml
-└── test/
-    └── java/
+└── main/
+    ├── java/
+    │   └── com/
+    │       └── contactsmanager/
+    │           └── contactsmanagerfx/
+    │               ├── dataStructures/
+    │               │   ├── AbstractGraphCB.java
+    │               │   ├── AdjacencyListGraphCB.java
+    │               │   ├── AdjacencyMatrixGraphCB.java
+    │               │   └── HashMapCB.java
+    │               ├── interfaces/
+    │               │   ├── ConnectionsManager.java
+    │               │   └── ContactsManager.java
+    │               ├── model/
+    │               │   └── Contact.java
+    │               ├── performance/
+    │               │   ├── DataStructureComparator.java
+    │               │   ├── PerformanceMeasurement.java
+    │               │   ├── PerformanceMetric.java
+    │               │   └── PerformanceTest.java
+    │               ├── utility/
+    │               │   ├── AdjacencyListGraphTableUtils.java
+    │               │   ├── AdjacencyMatrixGraphUtils.java
+    │               │   └── HashMapTableUtils.java
+    │               ├── App.java
+    │               ├── AppDisplayController.java
+    │               └── Main.java
+    └── resources/
         └── com/
             └── contactsmanager/
-                └── test/
-                    ├── AdjacencyMatrixTests.java
-                    ├── GraphTests.java
-                    └── HashTests.java
+                └── contactsmanagerfx/
+                    ├── css/
+                    │   └── stylesheet.css
+                    └── views/
+                        └── MainDisplay.fxml
+
 ```
 
 ## Performance Analysis
@@ -207,7 +205,10 @@ The choice of data structure should depend on the specific use case:
 - Use Hash-based implementation for simple contact management without complex relationships
 
 ## Contributors
-[Your Name]
-[Your Student ID]
-[Course Name]
-[Institution]
+- Anastasia Larasati (2802547692)
+- Kenny Tang (2802517733)
+- Tiffany Widjaja (2802503791)
+
+[OOP Class & Data Structures Class]
+
+[BINUS International]

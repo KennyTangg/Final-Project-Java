@@ -26,7 +26,7 @@ public class PerformanceTest {
 
         // Create data structures with proper sizing
         AdjacencyListGraphCB graph = new AdjacencyListGraphCB();
-        AdjacencyMatrixGraphCB matrixGraph = new AdjacencyMatrixGraphCB(Math.min(contactCount, 3000));
+        AdjacencyMatrixGraphCB matrixGraph = new AdjacencyMatrixGraphCB(Math.min(contactCount, 10000));
         HashMapCB hash = new HashMapCB();
 
         // Setup the enhanced comparator with runtime environment monitoring
